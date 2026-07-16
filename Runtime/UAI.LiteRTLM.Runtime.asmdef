@@ -1,0 +1,14 @@
+{
+    "name": "UAI.LiteRTLM.Runtime",
+    "rootNamespace": "Uralstech.UAI.LiteRTLM",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
