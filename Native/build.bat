@@ -1,7 +1,7 @@
 @echo off
 
 set "DRIVE=%~d0"
-set "BUILD_SCRIPTS_DIR=%CD%"
+:: set "BUILD_SCRIPTS_DIR=%CD%"
 cd LiteRT-LM || exit /b 1
 
 for /f %%H in ('git rev-parse HEAD') do set HEAD_COMMIT=%%H
@@ -11,8 +11,8 @@ set "PLUGIN_DIR=..\..\UAI.LiteRTLM\Packages\com.uralstech.uai.litertlm\Runtime\P
 set "BUILD_DIR=.\bazel-bin\c"
 set "BAZEL_OUT=%DRIVE%\bzl"
 
-set "BUILD_FILE=.\c\BUILD"
-set "BUILD_FILE_BACKUP=%TEMP%\tmp_%RANDOM%.bazel"
+:: set "BUILD_FILE=.\c\BUILD"
+:: set "BUILD_FILE_BACKUP=%TEMP%\tmp_%RANDOM%.bazel"
 
 set "PREBUILT_LIBS_COMMON=libLiteRt libGemmaModelConstraintProvider"
 set "PREBUILT_LIBS_PC=libLiteRtTopKWebGpuSampler libLiteRtWebGpuAccelerator libwebgpu_dawn"
@@ -42,15 +42,16 @@ copy /y "%COPY_SRC%" "%COPY_DST%"
 
 exit /b 0
 
-:restore_build_file
-call :force_copy_file "%BUILD_FILE_BACKUP%" "%BUILD_FILE%"
-del /F /Q "%BUILD_FILE_BACKUP%"
-exit /b 0
-
-:patch_capabilities
-copy /y "%BUILD_FILE%" "%BUILD_FILE_BACKUP%" || exit /b 1
-python "%BUILD_SCRIPTS_DIR%\patch_capabilities.py" "%BUILD_FILE%"
-exit /b %ERRORLEVEL%
+:: For LiteRT-LM v0.16.0
+:: :restore_build_file
+:: call :force_copy_file "%BUILD_FILE_BACKUP%" "%BUILD_FILE%"
+:: del /F /Q "%BUILD_FILE_BACKUP%"
+:: exit /b 0
+:: 
+:: :patch_capabilities
+:: copy /y "%BUILD_FILE%" "%BUILD_FILE_BACKUP%" || exit /b 1
+:: python "%BUILD_SCRIPTS_DIR%\patch_capabilities.py" "%BUILD_FILE%"
+:: exit /b %ERRORLEVEL%
 
 :copy_libs
 set "BUILT_SYMBOL=%~1"
@@ -101,11 +102,11 @@ exit /b 0
 
 :main
 
-call :patch_capabilities
-if errorlevel 1 (
-    call :restore_build_file
-    exit /b 1
-)
+:: call :patch_capabilities
+:: if errorlevel 1 (
+::     call :restore_build_file
+::     exit /b 1
+:: )
 
 :: ------------------------------ Windows ------------------------------
 
@@ -117,7 +118,7 @@ call :build windows                             ^
     "--define=litert_runtime_link_mode=dynamic"
 
 if errorlevel 1 (
-    call :restore_build_file
+    :: call :restore_build_file
     exit /b 1
 )
 
@@ -126,5 +127,5 @@ call :copy_windows_x64_libs
 
 echo LITERT_LM_REV = "%HEAD_COMMIT%" > "%PLUGIN_DIR%\.build_sources.windows_x64.txt"
 
-call :restore_build_file
+:: call :restore_build_file
 exit /b 0

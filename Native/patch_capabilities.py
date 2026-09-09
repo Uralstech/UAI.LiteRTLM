@@ -1,3 +1,5 @@
+# No longer required for LiteRT-LM >= v0.17.0
+
 from pathlib import Path
 import sys
 
