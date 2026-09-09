@@ -96,8 +96,7 @@ patch_prebuilt_lib_android arm64 libLiteRtTopKOpenClSampler
 # liblitert-lm.dylib to register it.
 
 build macos_arm64 --linkopt=-Wl,-rpath,@loader_path \
-    --define=litert_runtime_link_mode=dynamic       \
-    --define=resolve_symbols_in_exec=false || exit 1
+    --define=litert_runtime_link_mode=dynamic || exit 1
 
 copy_libs macos arm64 dylib macOS "${PREBUILT_LIBS_APPLE}"
 

@@ -114,8 +114,7 @@ if errorlevel 1 (
 :: litert-lm.dll to register it.
 
 call :build windows                             ^
-    "--define=litert_runtime_link_mode=dynamic" ^
-    "--define=resolve_symbols_in_exec=false"
+    "--define=litert_runtime_link_mode=dynamic"
 
 if errorlevel 1 (
     call :restore_build_file
