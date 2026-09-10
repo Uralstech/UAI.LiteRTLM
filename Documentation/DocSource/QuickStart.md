@@ -72,11 +72,11 @@ data to streamed operations because the wrappers use their own data to track man
 
 #### LiteRT-LM Notes
 
-# [v0.17.0](#tab/litert-lm-notes-v0_17_0)
+# [v0.17.0](#tab/litert-lm-notes-v0170)
 
 `2.5.0-preview.1` does not expose the [`experimental`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/experimental.h) and [`embedding_engine`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/embedding_engine.h) APIs.
 
-# [v0.16.1/v0.16.0](#tab/litert-lm-notes-v0_16_1-v0_16_0)
+# [v0.16.1/v0.16.0](#tab/litert-lm-notes-v0161-v0160)
 
 LiteRT-LM v0.16.1 and v0.16.0 target the same commit as of 19/08/2026.
 
@@ -85,13 +85,13 @@ GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135
 `2.4.0-preview.x` and `2.3.0-preview.x` target the same tag but different commits
 as the upstream tag was edited after `2.3.0-preview.1` was released.
 
-# [v0.15.0](#tab/litert-lm-notes-v0_15_0)
+# [v0.15.0](#tab/litert-lm-notes-v0150)
 
 GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Android (arm64) and Windows.
 
 The `2.2.0-preview.1+` releases include the patched `libLiteRtTopKOpenClSampler.so`, from commit `8bee4dd`, to fix the issue on Android.
 
-# [v0.15.0-alpha0](#tab/litert-lm-notes-v0_15_0-alpha0)
+# [v0.15.0-alpha0](#tab/litert-lm-notes-v0150-alpha0)
 
 Provides Metal acceleration on iOS devices, but the iOS simulator uses CPU-only TopK sampling.
 
