@@ -83,8 +83,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
             public static extern void litert_lm_session_config_delete(IntPtr config);
 
             /// <summary>Sets the maximum number of output tokens per decode step for this session.</summary>
+            /// <remarks>
+            /// For thinking models, both thinking (reasoning) tokens and the final response
+            /// tokens count towards this limit.
+            /// </remarks>
             /// <param name="config">The config to modify.</param>
-            /// <param name="maxOutputTokens">The maximum number of output tokens.</param>
+            /// <param name="maxOutputTokens">The maximum number of tokens to generate (including thinking tokens).</param>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_session_config_set_max_output_tokens(IntPtr config, int maxOutputTokens);
 
@@ -387,7 +391,19 @@ namespace Uralstech.UAI.LiteRTLM.Native
             /// <param name="maxNumImages">The maximum number of images.</param>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_engine_settings_set_max_num_images(IntPtr settings, int maxNumImages);
-
+            
+            /// <summary>Sets the maximum vision tokens generated per image for the engine.</summary>
+            /// <remarks>
+            /// When set, the engine automatically selects vision encoder and adapter
+            /// signatures with capacity up to this limit and configures vision patch
+            /// metadata.
+            /// </remarks>
+            /// <param name="settings">The engine settings.</param>
+            /// <param name="maxVisionTokensPerImage">The maximum vision tokens per image.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_engine_settings_set_max_vision_tokens_per_image(IntPtr settings,
+                int maxVisionTokensPerImage);
+            
             /// <summary>Sets the cache directory for the engine.</summary>
             /// <param name="settings">The engine settings.</param>
             /// <param name="cacheDir">The cache directory.</param>
@@ -516,6 +532,26 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern int litert_lm_engine_settings_set_supported_audio_lora_ranks(IntPtr settings,
                 int[] loraRanks, UIntPtr numRanks);
+            
+            /// <summary>Sets whether to enable Metal residency set on GPU.</summary>
+            /// <remarks>
+            /// <para>
+            /// When enabled on Apple platforms (macOS and iOS with Metal GPU backend), this
+            /// uses Apple's MTLResidencySet API to ensure model weights and allocations
+            /// remain resident in GPU memory, preventing memory swapping and reducing
+            /// allocation overhead.
+            /// </para>
+            /// <para>
+            /// This setting is only supported on Apple platforms (macOS / iOS) with the GPU
+            /// backend. On other platforms (e.g. Linux, Android, Windows) or non-GPU
+            /// backends, this setting has no effect and is safely ignored.
+            /// </para>
+            /// </remarks>
+            /// <param name="settings">The engine settings.</param>
+            /// <param name="enableMetalResidencySet">Whether to enable Metal residency set.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_engine_settings_set_gpu_enable_metal_residency_set(IntPtr settings,
+                [MarshalAs(UnmanagedType.I1)] bool enableMetalResidencySet);
         }
 
         public static class Engine
@@ -1190,8 +1226,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
                 int visualTokenBudget);
 
             /// <summary>Sets the maximum number of output tokens for the conversation optional args.</summary>
+            /// <remarks>
+            /// For thinking models, both thinking (reasoning) tokens and the final response
+            /// tokens count towards this limit.
+            /// </remarks>
             /// <param name="optionalArgs">The optional args to modify.</param>
-            /// <param name="maxOutputTokens">The maximum number of output tokens.</param>
+            /// <param name="maxOutputTokens">The maximum number of tokens to generate (including thinking tokens).</param>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_conversation_optional_args_set_max_output_tokens(IntPtr optionalArgs,
                 int maxOutputTokens);
@@ -1356,6 +1396,49 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool litert_lm_loaded_file_has_speculative_decoding_support(IntPtr loadedFile);
+            
+            /// <summary>
+            /// Returns <see langword="true"/> if the model supports thinking / reasoning steps.
+            /// If the metadata is not explicitly set in the model, this returns <see langword="false"/>.
+            /// </summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool litert_lm_loaded_file_supports_thinking(IntPtr loadedFile);
+
+            /// <summary>
+            /// Returns <see langword="true"/> if the model supports function calling / tool use.
+            /// If the metadata is not explicitly set in the model, this returns <see langword="false"/>.
+            /// </summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool litert_lm_loaded_file_supports_function_calling(IntPtr loadedFile);
+
+            /// <summary>Returns the default sampler type for the model.</summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern SamplerType litert_lm_loaded_file_sampler_type(IntPtr loadedFile);
+
+            /// <summary>Returns the default sampler temperature for the model.</summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern float litert_lm_loaded_file_sampler_temperature(IntPtr loadedFile);
+
+            /// <summary>Returns the default sampler topK for the model.</summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_loaded_file_sampler_top_k(IntPtr loadedFile);
+
+            /// <summary>Returns the default sampler topP for the model.</summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern float litert_lm_loaded_file_sampler_top_p(IntPtr loadedFile);
+
+            /// <summary>Returns <see langword="true"/> if the input modality is supported.</summary>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool litert_lm_loaded_file_supports_input_modality(IntPtr loadedFile,
+                Modality modality);
+
+            /// <summary>Returns the maximum vision token budget for the model.</summary>
+            /// <remarks>Returns -1 if the model does not support vision or if the budget is not defined.</remarks>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_loaded_file_max_vision_token_budget(IntPtr loadedFile);
         }
     }
 }

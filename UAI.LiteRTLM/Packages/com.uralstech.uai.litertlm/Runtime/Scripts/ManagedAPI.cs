@@ -227,7 +227,11 @@ namespace Uralstech.UAI.LiteRTLM
         }
 
         /// <summary>Sets the maximum number of output tokens per decode step for this session.</summary>
-        /// <param name="maxOutputTokens">The maximum number of output tokens.</param>
+        /// <remarks>
+        /// For thinking models, both thinking (reasoning) tokens and the final response
+        /// tokens count towards this limit.
+        /// </remarks>
+        /// <param name="maxOutputTokens">The maximum number of tokens to generate (including thinking tokens).</param>
         public void SetMaxOutputTokens(int maxOutputTokens)
         {
             ThrowIfDisposed();
@@ -639,6 +643,19 @@ namespace Uralstech.UAI.LiteRTLM
             NativeAPI.EngineSettings.litert_lm_engine_settings_set_max_num_images(Native, maxNumImages);
         }
 
+        /// <summary>Sets the maximum vision tokens generated per image for the engine.</summary>
+        /// <remarks>
+        /// When set, the engine automatically selects vision encoder and adapter
+        /// signatures with capacity up to this limit and configures vision patch
+        /// metadata.
+        /// </remarks>
+        /// <param name="maxVisionTokensPerImage">The maximum vision tokens per image.</param>
+        public void SetMaxVisionTokensPerImage(int maxVisionTokensPerImage)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EngineSettings.litert_lm_engine_settings_set_max_vision_tokens_per_image(Native, maxVisionTokensPerImage);
+        }
+        
         /// <summary>Sets the cache directory for the engine.</summary>
         /// <param name="cacheDir">The cache directory.</param>
         public void SetCacheDir(string cacheDir)
@@ -784,6 +801,27 @@ namespace Uralstech.UAI.LiteRTLM
         {
             ThrowIfDisposed();
             return NativeAPI.EngineSettings.litert_lm_engine_settings_set_supported_audio_lora_ranks(Native, loraRanks, (UIntPtr)loraRanks.Length);
+        }
+
+        /// <summary>Sets whether to enable Metal residency set on GPU.</summary>
+        /// <remarks>
+        /// <para>
+        /// When enabled on Apple platforms (macOS and iOS with Metal GPU backend), this
+        /// uses Apple's MTLResidencySet API to ensure model weights and allocations
+        /// remain resident in GPU memory, preventing memory swapping and reducing
+        /// allocation overhead.
+        /// </para>
+        /// <para>
+        /// This setting is only supported on Apple platforms (macOS / iOS) with the GPU
+        /// backend. On other platforms (e.g. Linux, Android, Windows) or non-GPU
+        /// backends, this setting has no effect and is safely ignored.
+        /// </para>
+        /// </remarks>
+        /// <param name="enableMetalResidencySet">Whether to enable Metal residency set.</param>
+        public void SetGPUEnableMetalResidencySet(bool enableMetalResidencySet)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EngineSettings.litert_lm_engine_settings_set_gpu_enable_metal_residency_set(Native, enableMetalResidencySet);
         }
         
         protected override void ReleaseUnmanagedResources()
@@ -1829,8 +1867,12 @@ namespace Uralstech.UAI.LiteRTLM
                 Native, visualTokenBudget);
         }
         
-        /// <summary>Sets the maximum number of output tokens for the conversation optional arguments.</summary>
-        /// <param name="maxOutputTokens">The maximum number of output tokens.</param>
+        /// <summary>Sets the maximum number of output tokens for the conversation optional args.</summary>
+        /// <remarks>
+        /// For thinking models, both thinking (reasoning) tokens and the final response
+        /// tokens count towards this limit.
+        /// </remarks>
+        /// <param name="maxOutputTokens">The maximum number of tokens to generate (including thinking tokens).</param>
         public void SetMaxOutputTokens(int maxOutputTokens)
         {
             ThrowIfDisposed();
@@ -2042,6 +2084,69 @@ namespace Uralstech.UAI.LiteRTLM
         {
             ThrowIfDisposed();
             return NativeAPI.Capabilities.litert_lm_loaded_file_has_speculative_decoding_support(Native);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the model supports thinking / reasoning steps.
+        /// If the metadata is not explicitly set in the model, this returns <see langword="false"/>.
+        /// </summary>
+        public bool SupportsThinking()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_supports_thinking(Native);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if the model supports function calling / tool use.
+        /// If the metadata is not explicitly set in the model, this returns <see langword="false"/>.
+        /// </summary>
+        public bool SupportsFunctionCalling()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_supports_function_calling(Native);
+        }
+
+        /// <summary>Returns the default sampler type for the model.</summary>
+        public SamplerType GetSamplerType()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_type(Native);
+        }
+
+        /// <summary>Returns the default sampler temperature for the model.</summary>
+        public float GetSamplerTemperature()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_temperature(Native);
+        }
+
+        /// <summary>Returns the default sampler topK for the model.</summary>
+        public int GetSamplerTopK()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_top_k(Native);
+        }
+
+        /// <summary>Returns the default sampler topP for the model.</summary>
+        public float GetSamplerTopP()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_top_p(Native);
+        }
+
+        /// <summary>Returns <see langword="true"/> if the input modality is supported.</summary>
+        public bool SupportsInputModality(Modality modality)
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_supports_input_modality(Native, modality);
+        }
+
+        /// <summary>Returns the maximum vision token budget for the model.</summary>
+        /// <remarks>Returns -1 if the model does not support vision or if the budget is not defined.</remarks>
+        public int GetMaxVisionTokenBudget()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.Capabilities.litert_lm_loaded_file_max_vision_token_budget(Native);
         }
         
         protected override void ReleaseUnmanagedResources()

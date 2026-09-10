@@ -30,17 +30,20 @@ namespace Uralstech.UAI.LiteRTLM
     /// <summary>Represents the type of sampler.</summary>
     public enum SamplerType : int
     {
+        /// <summary>Default fallback/unspecified.</summary>
+        Unspecified = 0,
+        
         /// <summary>Probabilistically pick among the top k tokens.</summary>
-        TopK    = 1,
+        TopK        = 1,
                 
         /// <summary>
         /// Probabilistically pick among the tokens such that the sum is greater
         /// than or equal to p tokens after first performing top-k sampling.
         /// </summary>
-        TopP    = 2,
+        TopP        = 2,
 
         /// <summary>Pick the token with maximum logit (i.e., argmax).</summary>
-        Greedy  = 3,
+        Greedy      = 3,
     }
 
     /// <summary>Represents the type of input data.</summary>
@@ -54,6 +57,7 @@ namespace Uralstech.UAI.LiteRTLM
         AudioEnd,
     }
     
+    /// <summary>Represents the activation data type.</summary>
     public enum ActivationDataType : int
     {
         /// <summary>Use float32 as the activation data type.</summary>
@@ -76,7 +80,7 @@ namespace Uralstech.UAI.LiteRTLM
         Ids     = 1,
     }
     
-    // Represents the type of constraint for constrained decoding.
+    /// <summary>Represents the type of constraint for constrained decoding.</summary>
     public enum ConstraintType : int
     {
         None        = 0,
@@ -84,10 +88,19 @@ namespace Uralstech.UAI.LiteRTLM
         JsonSchema  = 2,
     }
 
-    /// Represents the type of constraint provider.
+    /// <summary>Represents the type of constraint provider.</summary>
     public enum ConstraintProviderType : int 
     {
         LlGuidance = 1,
+    }
+
+    /// <summary>Input and output modalities supported by LiteRT-LM models.</summary>
+    public enum Modality : int
+    {
+        Text    = 0,
+        Vision  = 1,
+        Audio   = 2,
+        Video   = 3,
     }
 
     public static class BackendNames
