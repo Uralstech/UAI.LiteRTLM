@@ -60,22 +60,42 @@ them with the native API if needed.
 Currently, only one feature implemented by the native API is **not** exposed by the managed API. You cannot pass custom additional
 data to streamed operations because the wrappers use their own data to track managed `StreamCallback`s.
 
-### Version - LiteRT-LM - Platforms - Accelerators Table
+### Compatability Table
 
 | UAI.LiteRTLM     | LiteRT-LM                      | Included Platforms                                                                | Included Accelerators                                                 |
 | ---------------- | ------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 2.5.0-preview.1+ | v0.17.0 (`e9fd8c5`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.4.0-preview.1+ | v0.16.1 / v0.16.0 (`924e79c`)  | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.3.0-preview.1+ | v0.16.0 (`740f122`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.2.0-preview.1+ | v0.15.0 (`2117fc4`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.1.0-preview.5+ | v0.15.0-alpha0 (`ad53ed1`)     | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 
-#### Notes
+#### LiteRT-LM Notes
 
-- Both LiteRT-LM v0.16.1 and v0.16.0 target the same commit as of 19/08/2026
-- `2.4.0-preview.x` and `2.3.0-preview.x` target the same tag but different commits as the upstream tag was edited after `2.3.0-preview.1` was released.
-- LiteRT-LM v0.16.0 GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Windows.
-- LiteRT-LM v0.15.0 GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Android (arm64) and Windows, so this release contains a patched prebuilt dependency (`libLiteRtTopKOpenClSampler.so`) from commit `8bee4dd`. There is no patch for Windows as the latest upstream prebuilt still has the issue.
-- LiteRT-LM v0.15.0-alpha0 provides Metal acceleration on iOS devices, but the iOS simulator uses CPU-only TopK sampling.
+# [v0.17.0](#tab/litert-lm-notes-v0_17_0)
+
+`2.5.0-preview.1` does not expose the [`experimental`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/experimental.h) and [`embedding_engine`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/embedding_engine.h) APIs.
+
+# [v0.16.1/v0.16.0](#tab/litert-lm-notes-v0_16_1-v0_16_0)
+
+LiteRT-LM v0.16.1 and v0.16.0 target the same commit as of 19/08/2026.
+
+GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Windows.
+
+`2.4.0-preview.x` and `2.3.0-preview.x` target the same tag but different commits
+as the upstream tag was edited after `2.3.0-preview.1` was released.
+
+# [v0.15.0](#tab/litert-lm-notes-v0_15_0)
+
+GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Android (arm64) and Windows.
+
+The `2.2.0-preview.1+` releases include the patched `libLiteRtTopKOpenClSampler.so`, from commit `8bee4dd`, to fix the issue on Android.
+
+# [v0.15.0-alpha0](#tab/litert-lm-notes-v0_15_0-alpha0)
+
+Provides Metal acceleration on iOS devices, but the iOS simulator uses CPU-only TopK sampling.
+
+---
 
 ## Android GPU Acceleration
 
