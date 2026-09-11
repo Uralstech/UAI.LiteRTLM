@@ -2155,4 +2155,105 @@ namespace Uralstech.UAI.LiteRTLM
                 NativeAPI.Capabilities.litert_lm_loaded_file_delete(Native);
         }
     }
+
+    /// <summary>
+    /// WARNING: This class is EXPERIMENTAL and subject to change or removal without notice.
+    /// API stability and backward compatibility are not guaranteed.
+    /// </summary>
+    public sealed class SessionDebugInfo : LiteRTLMNativeHandle
+    {
+        internal SessionDebugInfo(IntPtr native)
+        {
+            Native = native;
+        }
+        
+        /// <summary>
+        /// Returns the relative debug capture directory from this <see cref="SessionDebugInfo"/>
+        /// object (e.g. "litert_lm_debugger/0"), containing intermediate activation
+        /// Safetensors dumps and token generation trace logs.
+        /// </summary>
+        /// <returns>The relative capture directory string.</returns>
+        public string? GetCaptureDir()
+        {
+            IntPtr ptr = NativeAPI.Experimental.litert_lm_experimental_session_debug_info_get_capture_dir(Native);
+            return ptr != IntPtr.Zero ? UnsafeUtils.MarshalStringUTF8(ptr) : null;
+        }
+        
+        protected override void ReleaseUnmanagedResources()
+        {
+            if (Native != IntPtr.Zero)
+                NativeAPI.Experimental.litert_lm_experimental_session_debug_info_delete(Native);
+        }
+    }
+
+    /// <summary>
+    /// WARNING: The methods in this class are EXPERIMENTAL and subject to change or removal without notice.
+    /// API stability and backward compatibility are not guaranteed.
+    /// </summary>
+    public static class Experimental
+    {
+        /// <summary>Updates whether to enable Metal residency set on GPU for the given engine at runtime.</summary>
+        /// <remarks>
+        /// <para>
+        /// To configure this setting during initialization, use
+        /// <see cref="EngineSettings.SetGPUEnableMetalResidencySet"/> instead.
+        /// </para>
+        /// <para>
+        /// When enabled on Apple platforms (macOS and iOS with Metal GPU backend), this
+        /// uses Apple's MTLResidencySet API to ensure model weights and allocations
+        /// remain resident in GPU memory, preventing memory swapping and reducing
+        /// allocation overhead.
+        /// </para>
+        /// <para>
+        /// This setting is only supported on Apple platforms (macOS / iOS) with the GPU
+        /// backend. On other platforms (e.g. Linux, Android, Windows) or non-GPU
+        /// backends, this setting has no effect and is safely ignored.
+        /// </para>
+        /// </remarks>
+        /// <param name="engine">The engine to update.</param>
+        /// <param name="enableMetalResidencySet">Whether to enable Metal residency set.</param>
+        /// <returns>0 on success, non-zero on failure.</returns>
+        public static int UpdateGPUEnableMetalResidencySet(this Engine engine, bool enableMetalResidencySet) =>
+            engine != null
+                ? NativeAPI.Experimental.litert_lm_experimental_engine_update_gpu_enable_metal_residency_set(engine, enableMetalResidencySet)
+                : throw new ArgumentNullException(nameof(engine));
+
+        /// <summary>
+        /// Checks whether the LiteRT-LM runtime binary was built with the debugger
+        /// tracing backend enabled (LITERT_LM_DEBUGGER_ENABLED=1).
+        /// </summary>
+        /// <returns>1 if debugger is enabled at compile-time, 0 otherwise.</returns>
+        public static int IsDebuggerEnabled() =>
+            NativeAPI.Experimental.litert_lm_experimental_is_debugger_enabled();
+
+        /// <summary>
+        /// Returns debug info for the session, or <see langword="null"/> on failure or if
+        /// debugging is unsupported/disabled. The caller is responsible for disposing the returned wrapper.
+        /// </summary>
+        /// <param name="session">The session to query.</param>
+        /// <returns>The session debug info result, or <see langword="null"/> on failure or if debugging is unsupported.</returns>
+        public static SessionDebugInfo? GetDebugInfo(this Session session)
+        {
+            IntPtr ptr = session != null
+                ? NativeAPI.Experimental.litert_lm_experimental_session_get_debug_info(session)
+                : throw new ArgumentNullException(nameof(session));
+            
+            return ptr != IntPtr.Zero ? new SessionDebugInfo(ptr) : null;
+        }
+
+        /// <summary>
+        /// Returns session debug info for the conversation's underlying session, or <see langword="null"/>
+        /// on failure or if debugging is unsupported/disabled. The caller is responsible for disposing the returned wrapper.
+        /// </summary>
+        /// <param name="conversation">The conversation to query.</param>
+        /// <returns>The session debug info result, or <see langword="null"/> on failure or if debugging is unsupported.</returns>
+        public static SessionDebugInfo? GetSessionDebugInfo(this Conversation conversation)
+        {
+            IntPtr ptr = conversation != null 
+                ? NativeAPI.Experimental.litert_lm_experimental_conversation_get_session_debug_info(conversation)
+                : throw new ArgumentNullException(nameof(conversation));
+            
+            return ptr != IntPtr.Zero ? new SessionDebugInfo(ptr) : null;
+        }
+    }
 }

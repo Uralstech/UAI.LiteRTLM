@@ -1440,5 +1440,82 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern int litert_lm_loaded_file_max_vision_token_budget(IntPtr loadedFile);
         }
+        
+        /// <summary>
+        /// WARNING: The APIs declared in this class are EXPERIMENTAL and subject to
+        /// change or removal without notice. API stability and backward compatibility
+        /// are not guaranteed.
+        /// </summary>
+        public static class Experimental
+        {
+            /// <summary>Updates whether to enable Metal residency set on GPU for the given engine at runtime.</summary>
+            /// <remarks>
+            /// <para>
+            /// To configure this setting during initialization, use
+            /// <see cref="EngineSettings.litert_lm_engine_settings_set_gpu_enable_metal_residency_set"/> instead.
+            /// </para>
+            /// <para>
+            /// When enabled on Apple platforms (macOS and iOS with Metal GPU backend), this
+            /// uses Apple's MTLResidencySet API to ensure model weights and allocations
+            /// remain resident in GPU memory, preventing memory swapping and reducing
+            /// allocation overhead.
+            /// </para>
+            /// <para>
+            /// This setting is only supported on Apple platforms (macOS / iOS) with the GPU
+            /// backend. On other platforms (e.g. Linux, Android, Windows) or non-GPU
+            /// backends, this setting has no effect and is safely ignored.
+            /// </para>
+            /// </remarks>
+            /// <param name="engine">The engine to update.</param>
+            /// <param name="enableMetalResidencySet">Whether to enable Metal residency set.</param>
+            /// <returns>0 on success, non-zero on failure.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_experimental_engine_update_gpu_enable_metal_residency_set(IntPtr engine,
+                [MarshalAs(UnmanagedType.I1)] bool enableMetalResidencySet);
+
+            /// <summary>
+            /// Checks whether the LiteRT-LM runtime binary was built with the debugger
+            /// tracing backend enabled (LITERT_LM_DEBUGGER_ENABLED=1).
+            /// </summary>
+            /// <returns>1 if debugger is enabled at compile-time, 0 otherwise.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_experimental_is_debugger_enabled();
+
+            /// <summary>
+            /// Returns debug info for the session, or <see cref="IntPtr.Zero"/> on failure or if
+            /// debugging is unsupported/disabled. The caller is responsible for deleting
+            /// the returned object using <see cref="litert_lm_experimental_session_debug_info_delete"/>.
+            /// </summary>
+            /// <param name="session">The session to query.</param>
+            /// <returns>A pointer to the session debug info result, or <see cref="IntPtr.Zero"/> on failure or if debugging is unsupported.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_experimental_session_get_debug_info(IntPtr session);
+
+            /// <summary>
+            /// Returns session debug info for the conversation's underlying session, or <see cref="IntPtr.Zero"/>
+            /// on failure or if debugging is unsupported/disabled. The caller is
+            /// responsible for deleting the returned object using <see cref="litert_lm_experimental_session_debug_info_delete"/>.
+            /// </summary>
+            /// <param name="conversation">The conversation to query.</param>
+            /// <returns>A pointer to the session debug info result, or <see cref="IntPtr.Zero"/> on failure or if debugging is unsupported.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_experimental_conversation_get_session_debug_info(IntPtr conversation);
+
+            /// <summary>Destroys a LiteRtLmSessionDebugInfo object.</summary>
+            /// <param name="debugInfo">The session debug info object to destroy.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_experimental_session_debug_info_delete(IntPtr debugInfo);
+
+            /// <summary>
+            /// Returns the relative debug capture directory from a LiteRtLmSessionDebugInfo
+            /// object (e.g. "litert_lm_debugger/0"), containing intermediate activation
+            /// Safetensors dumps and token generation trace logs. The returned string is
+            /// owned by the `debugInfo` object and is valid only for its lifetime.
+            /// </summary>
+            /// <param name="debugInfo">The session debug info object.</param>
+            /// <returns>The relative capture directory string.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_experimental_session_debug_info_get_capture_dir(IntPtr debugInfo);
+        }
     }
 }
