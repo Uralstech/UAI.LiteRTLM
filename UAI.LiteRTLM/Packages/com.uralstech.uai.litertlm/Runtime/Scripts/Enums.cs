@@ -103,6 +103,17 @@ namespace Uralstech.UAI.LiteRTLM
         Video   = 3,
     }
 
+    /// <summary>Strategy for handling inputs longer than the maximum supported signature length.</summary>
+    public enum InputOverflowStrategy : int
+    {
+        /// <summary>Chunks the input into sub-sequences, embeds each chunk, and returns the mean embedding across all chunks.</summary>
+        ChunkAndAverage = 0,
+        /// <summary>Truncates the input to the longest signature length.</summary>
+        Truncate        = 1,
+        /// <summary>Returns an error status if the input exceeds the longest signature length.</summary>
+        Error           = 2,
+    }
+
     public static class BackendNames
     {
         public const string CPU = "cpu";

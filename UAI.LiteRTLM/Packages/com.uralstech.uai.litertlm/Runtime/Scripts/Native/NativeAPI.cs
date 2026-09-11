@@ -1440,7 +1440,311 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern int litert_lm_loaded_file_max_vision_token_budget(IntPtr loadedFile);
         }
+
+        public static class EmbeddingEngineSettings
+        {
+            /// <summary>
+            /// Creates LiteRT LM Embedding Engine Settings. The caller is responsible for
+            /// destroying the settings using <see cref="litert_lm_embedding_engine_settings_delete"/>.
+            /// </summary>
+            /// <param name="modelPath">The path to the model file.</param>
+            /// <param name="backendStr">The backend to use (e.g., "cpu", "gpu", "npu").</param>
+            /// <param name="visionBackendStr">The vision backend to use, or <see langword="null"/> if not set.</param>
+            /// <param name="audioBackendStr">The audio backend to use, or <see langword="null"/> if not set.</param>
+            /// <returns>A pointer to the created settings, or <see cref="IntPtr.Zero"/> on failure.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_engine_settings_create(
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string modelPath,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string backendStr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string visionBackendStr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string audioBackendStr);
         
+            /// <summary>
+            /// Destroys LiteRT LM Embedding Engine Settings.
+            /// </summary>
+            /// <param name="settings">The settings to destroy.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_delete(IntPtr settings);
+        
+            /// <summary>
+            /// Sets the number of threads for the audio CPU backend in Embedding Engine Settings.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="numThreads">The number of threads.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_audio_num_threads(IntPtr settings,
+                int numThreads);
+        
+            /// <summary>
+            /// Sets the cache directory for the Embedding Engine.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="cacheDir">The cache directory.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_cache_dir(IntPtr settings,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string cacheDir);
+        
+            /// <summary>
+            /// Sets the LiteRT dispatch library directory for the main NPU backend.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="libDir">The dispatch library directory.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_litert_dispatch_lib_dir(IntPtr settings,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
+        
+            /// <summary>
+            /// Sets the LiteRT dispatch library directory for the vision NPU backend.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="libDir">The dispatch library directory.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_vision_litert_dispatch_lib_dir(IntPtr settings,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
+        
+            /// <summary>
+            /// Sets the LiteRT dispatch library directory for the audio NPU backend.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="libDir">The dispatch library directory.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_audio_litert_dispatch_lib_dir(IntPtr settings,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
+        
+            /// <summary>
+            /// Sets the maximum sequence length (in tokens) for text encoder signatures in Embedding Engine Settings.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="maxInputLength">The maximum input length. Passing a non-positive value unsets the option.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_max_input_length(IntPtr settings,
+                int maxInputLength);
+        
+            /// <summary>
+            /// Sets the desired number of vision tokens generated per image in Embedding Engine Settings.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="visionTokensPerImage">The vision tokens per image. Passing a non-positive value unsets the option.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_vision_tokens_per_image(IntPtr settings,
+                int visionTokensPerImage);
+        }
+        
+        public static class EmbeddingOptions
+        {
+            /// <summary>
+            /// Creates LiteRT LM Embedding Options with default values (<c>normalize = true</c>, <c>insert_special_tokens = true</c>).
+            /// The caller is responsible for destroying options using <see cref="litert_lm_embedding_options_delete"/>.
+            /// </summary>
+            /// <returns>A pointer to the created options, or <see cref="IntPtr.Zero"/> on failure.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_options_create();
+        
+            /// <summary>
+            /// Destroys LiteRT LM Embedding Options.
+            /// </summary>
+            /// <param name="options">The options to destroy.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_options_delete(IntPtr options);
+        
+            /// <summary>
+            /// Sets whether the embedding should be L2 normalized.
+            /// </summary>
+            /// <param name="options">The options to modify.</param>
+            /// <param name="normalize">Whether to normalize.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_options_set_normalize(IntPtr options,
+                [MarshalAs(UnmanagedType.I1)] bool normalize);
+        
+            /// <summary>
+            /// Gets whether the embedding should be L2 normalized.
+            /// </summary>
+            /// <param name="options">The options to inspect.</param>
+            /// <returns><see langword="true"/> if normalization is enabled; otherwise, <see langword="false"/>.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool litert_lm_embedding_options_get_normalize(IntPtr options);
+        
+            /// <summary>
+            /// Sets whether special tokens (BOS, EOS, start/end of image, start/end of audio) should be automatically inserted.
+            /// </summary>
+            /// <param name="options">The options to modify.</param>
+            /// <param name="insertSpecialTokens">Whether to insert special tokens.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_options_set_insert_special_tokens(IntPtr options,
+                [MarshalAs(UnmanagedType.I1)] bool insertSpecialTokens);
+        
+            /// <summary>
+            /// Gets whether special tokens should be automatically inserted.
+            /// </summary>
+            /// <param name="options">The options to inspect.</param>
+            /// <returns><see langword="true"/> if special tokens insertion is enabled; otherwise, <see langword="false"/>.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool litert_lm_embedding_options_get_insert_special_tokens(IntPtr options);
+        
+            /// <summary>
+            /// Sets the input overflow strategy.
+            /// </summary>
+            /// <param name="options">The options to modify.</param>
+            /// <param name="strategy">The overflow strategy to use.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_options_set_input_overflow_strategy(IntPtr options,
+                InputOverflowStrategy strategy);
+        
+            /// <summary>
+            /// Gets the input overflow strategy.
+            /// </summary>
+            /// <param name="options">The options to inspect.</param>
+            /// <returns>The overflow strategy configured in options.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern InputOverflowStrategy litert_lm_embedding_options_get_input_overflow_strategy(IntPtr options);
+        
+            /// <summary>
+            /// Sets the output embedding size to truncate the embedding to.
+            /// </summary>
+            /// <param name="options">The options to modify.</param>
+            /// <param name="outputSize">
+            /// The output embedding size to truncate to. Pass 0 or a negative value (e.g., 0 or -1) to unset and use the default output embedding size.
+            /// </param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_options_set_output_size(IntPtr options,
+                int outputSize);
+        
+            /// <summary>
+            /// Gets the output embedding size.
+            /// </summary>
+            /// <param name="options">The options to inspect.</param>
+            /// <returns>The output embedding size, or -1 if not set (using default size).</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_embedding_options_get_output_size(IntPtr options);
+        
+            /// <summary>
+            /// Sets the vision tokens per image.
+            /// </summary>
+            /// <param name="options">The options to modify.</param>
+            /// <param name="visionTokensPerImage">
+            /// The number of vision tokens per image. Passing a non-positive value unsets the option.
+            /// </param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_options_set_vision_tokens_per_image(IntPtr options,
+                int visionTokensPerImage);
+        
+            /// <summary>
+            /// Gets the vision tokens per image.
+            /// </summary>
+            /// <param name="options">The options to inspect.</param>
+            /// <returns>The vision tokens per image configured in options, or 0 if not set.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_embedding_options_get_vision_tokens_per_image(IntPtr options);
+        }
+        
+        public static class EmbeddingResponse
+        {
+            /// <summary>
+            /// Destroys a LiteRT LM Embedding Response.
+            /// </summary>
+            /// <param name="response">The response to destroy.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_response_delete(IntPtr response);
+        
+            /// <summary>
+            /// Returns the dimension (number of float values) of the embedding response.
+            /// </summary>
+            /// <param name="response">The response to inspect.</param>
+            /// <returns>Number of float elements.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern UIntPtr litert_lm_embedding_response_get_size(IntPtr response);
+        
+            /// <summary>
+            /// Returns a pointer to the array of float embedding values.
+            /// The returned pointer is owned by <paramref name="response"/> and valid for its lifetime.
+            /// </summary>
+            /// <param name="response">The response to inspect.</param>
+            /// <returns>Pointer to float array, or <see cref="IntPtr.Zero"/> if empty.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_response_get_values(IntPtr response);
+        }
+        
+        public static class EmbeddingResponses
+        {
+            /// <summary>
+            /// Destroys a collection of LiteRT LM Embedding Responses.
+            /// </summary>
+            /// <param name="responses">The responses collection to destroy.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_responses_delete(IntPtr responses);
+        
+            /// <summary>
+            /// Returns the number of responses in the collection.
+            /// </summary>
+            /// <param name="responses">The responses collection.</param>
+            /// <returns>The batch size.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern UIntPtr litert_lm_embedding_responses_get_size(IntPtr responses);
+        
+            /// <summary>
+            /// Returns the embedding response at the given index in the batch.
+            /// The returned pointer is owned by <paramref name="responses"/> and valid for its lifetime.
+            /// </summary>
+            /// <param name="responses">The responses collection.</param>
+            /// <param name="index">The batch index.</param>
+            /// <returns>Pointer to the embedding response, or <see cref="IntPtr.Zero"/> if out of bounds.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_responses_get_at(IntPtr responses,
+                UIntPtr index);
+        }
+        
+        public static class EmbeddingEngine
+        {
+            /// <summary>
+            /// Creates a LiteRT LM Embedding Engine from the given settings. The caller is
+            /// responsible for destroying the engine using <see cref="litert_lm_embedding_engine_delete"/>.
+            /// </summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <returns>A pointer to the created engine, or <see cref="IntPtr.Zero"/> on failure.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_engine_create(IntPtr settings);
+        
+            /// <summary>
+            /// Destroys a LiteRT LM Embedding Engine.
+            /// </summary>
+            /// <param name="engine">The engine to destroy.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_delete(IntPtr engine);
+        
+            /// <summary>
+            /// Computes embedding response for a single request.
+            /// </summary>
+            /// <param name="engine">The embedding engine.</param>
+            /// <param name="inputs">Array of LiteRtLmInputData pointers representing multimodal input.</param>
+            /// <param name="numInputs">Number of inputs in the array.</param>
+            /// <param name="options">Optional embedding options. If <see cref="IntPtr.Zero"/>, default options are used.</param>
+            /// <returns>
+            /// A pointer to the embedding response, or <see cref="IntPtr.Zero"/> on failure.
+            /// The caller is responsible for deleting the response using <see cref="EmbeddingResponse.litert_lm_embedding_response_delete"/>.
+            /// </returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_engine_compute_embedding(IntPtr engine,
+                IntPtr inputs, UIntPtr numInputs, IntPtr options);
+        
+            /// <summary>
+            /// Computes embedding responses for a batch of requests.
+            /// </summary>
+            /// <param name="engine">The embedding engine.</param>
+            /// <param name="inputsBatch">An array of arrays of LiteRtLmInputData pointers.</param>
+            /// <param name="numInputsPerBatch">An array specifying the number of inputs for each request in the batch.</param>
+            /// <param name="batchSize">The number of requests in the batch.</param>
+            /// <param name="options">Optional embedding options. If <see cref="IntPtr.Zero"/>, default options are used.</param>
+            /// <returns>
+            /// A pointer to the batch responses, or <see cref="IntPtr.Zero"/> on failure.
+            /// The caller is responsible for deleting responses using <see cref="EmbeddingResponses.litert_lm_embedding_responses_delete"/>.
+            /// </returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_embedding_engine_compute_embedding_batch(IntPtr engine,
+                IntPtr inputsBatch, IntPtr numInputsPerBatch, UIntPtr batchSize, IntPtr options);
+        }
+
         /// <summary>
         /// WARNING: The APIs declared in this class are EXPERIMENTAL and subject to
         /// change or removal without notice. API stability and backward compatibility
