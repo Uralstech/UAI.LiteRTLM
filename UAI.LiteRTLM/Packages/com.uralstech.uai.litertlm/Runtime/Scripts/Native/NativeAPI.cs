@@ -1624,25 +1624,19 @@ namespace Uralstech.UAI.LiteRTLM.Native
         
         public static class EmbeddingResponses
         {
-            /// <summary>
-            /// Destroys a collection of LiteRT LM Embedding Responses.
-            /// </summary>
+            /// <summary>Destroys a collection of LiteRT LM Embedding Responses.</summary>
             /// <param name="responses">The responses collection to destroy.</param>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_embedding_responses_delete(IntPtr responses);
         
-            /// <summary>
-            /// Returns the number of responses in the collection.
-            /// </summary>
+            /// <summary>Returns the number of responses in the collection.</summary>
             /// <param name="responses">The responses collection.</param>
             /// <returns>The batch size.</returns>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern UIntPtr litert_lm_embedding_responses_get_size(IntPtr responses);
         
-            /// <summary>
-            /// Returns the embedding response at the given index in the batch.
-            /// The returned pointer is owned by <paramref name="responses"/> and valid for its lifetime.
-            /// </summary>
+            /// <summary>Returns the embedding response at the given index in the batch.</summary>
+            /// <remarks>The returned pointer is owned by <paramref name="responses"/> and valid for its lifetime.</remarks>
             /// <param name="responses">The responses collection.</param>
             /// <param name="index">The batch index.</param>
             /// <returns>Pointer to the embedding response, or <see cref="IntPtr.Zero"/> if out of bounds.</returns>

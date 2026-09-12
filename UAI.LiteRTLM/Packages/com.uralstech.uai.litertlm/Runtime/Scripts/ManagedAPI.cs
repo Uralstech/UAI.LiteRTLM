@@ -214,10 +214,24 @@ namespace Uralstech.UAI.LiteRTLM
             return new JsonResponse(ptr);
         }
 
-        public static EmbeddingResponse EmbeddingResponseFromPtr(IntPtr ptr)
+        /// <remarks>For pointers returned by <see cref="NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_get_at"/>.</remarks>
+        public static EmbeddingResponse EmbeddingResponseFromBorrowedPtr(IntPtr ptr)
         {
             ThrowIfNullPtr(ptr);
-            return new EmbeddingResponse(ptr);
+            return new EmbeddingResponse(ptr, isDisposable: false);
+        }
+        
+        /// <remarks>Use <see cref="EmbeddingResponseFromBorrowedPtr"/> instead for pointers returned by <see cref="NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_get_at"/>.</remarks>
+        public static EmbeddingResponse EmbeddingResponseFromOwnedPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new EmbeddingResponse(ptr, isDisposable: true);
+        }
+
+        public static EmbeddingResponses EmbeddingResponsesFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new EmbeddingResponses(ptr);
         }
 
         private static void ThrowIfNullPtr(IntPtr ptr)
@@ -2387,15 +2401,19 @@ namespace Uralstech.UAI.LiteRTLM
 
     public sealed class EmbeddingResponse : LiteRTLMNativeHandle
     {
-        internal EmbeddingResponse(IntPtr native)
+        private readonly bool _isDisposable;
+        
+        internal EmbeddingResponse(IntPtr native, bool isDisposable)
         {
             Native = native;
+            _isDisposable = isDisposable;
         }
         
         /// <summary>The response.</summary>
         /// <remarks>
         /// The returned span is only valid for the lifetime of this
-        /// <see cref="EmbeddingResponse"/> object.
+        /// <see cref="EmbeddingResponse"/> object OR the <see cref="EmbeddingResponses"/>
+        /// that created it.
         /// </remarks>
         public unsafe ReadOnlySpan<float> Span
         {
@@ -2417,7 +2435,10 @@ namespace Uralstech.UAI.LiteRTLM
         }
 
         /// <summary>Returns a pointer to the array of float embedding values.</summary>
-        /// <remarks>The returned pointer is owned by the <see cref="EmbeddingResponse"/> object and valid for its lifetime.</remarks>
+        /// <remarks>
+        /// The returned pointer is owned by the <see cref="EmbeddingResponse"/> object
+        /// OR <see cref="EmbeddingResponses"/> that created it, and is valid for its lifetime.
+        /// </remarks>
         /// <returns>Pointer to float array, or <see cref="IntPtr.Zero"/> if empty.</returns>
         private IntPtr GetValues()
         {
@@ -2427,8 +2448,59 @@ namespace Uralstech.UAI.LiteRTLM
         
         protected override void ReleaseUnmanagedResources()
         {
-            if (Native != IntPtr.Zero)
+            if (_isDisposable && Native != IntPtr.Zero)
                 NativeAPI.EmbeddingResponse.litert_lm_embedding_response_delete(Native);
+        }
+    }
+
+    public sealed class EmbeddingResponses : LiteRTLMNativeHandle
+    {
+        internal EmbeddingResponses(IntPtr native)
+        {
+            Native = native;
+        }
+
+        /// <summary>Returns the number of responses in the collection.</summary>
+        public int Count => (int)GetSize();
+
+        /// <summary>Returns the embedding response at the given index in the batch.</summary>
+        /// <remarks>
+        /// The returned pointer is owned by the <see cref="EmbeddingResponses"/> object and valid for its lifetime.
+        /// Calling <see cref="LiteRTLMNativeHandle.Dispose"/> is still encouraged for consistency.
+        /// </remarks>
+        /// <param name="index">The batch index.</param>
+        /// <returns>The embedding response.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
+        public EmbeddingResponse At(int index) =>
+            GetAt((UIntPtr)index);
+        
+        /// <summary>Returns the number of responses in the collection.</summary>
+        /// <returns>The batch size.</returns>
+        private UIntPtr GetSize()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_get_size(Native);
+        }
+        
+        /// <summary>
+        /// Returns the embedding response at the given index in the batch.
+        /// The returned pointer is owned by the <see cref="EmbeddingResponses"/> object and valid for its lifetime.
+        /// </summary>
+        /// <param name="index">The batch index.</param>
+        /// <returns>The embedding response.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
+        private EmbeddingResponse GetAt(UIntPtr index)
+        {
+            ThrowIfDisposed();
+            
+            IntPtr ptr = NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_get_at(Native, index);
+            return ptr != IntPtr.Zero ? new EmbeddingResponse(ptr, isDisposable: false) : throw new IndexOutOfRangeException();
+        }
+
+        protected override void ReleaseUnmanagedResources()
+        {
+            if (Native != IntPtr.Zero)
+                NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_delete(Native);
         }
     }
 
