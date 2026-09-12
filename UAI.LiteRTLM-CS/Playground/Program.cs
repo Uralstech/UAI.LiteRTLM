@@ -39,7 +39,7 @@ conversationConfig.SetThinkingConfig(thinkingConfig);
 using Conversation conversation = new(engine, conversationConfig);
 Console.WriteLine("Engine and conversation created.");
 
-const string message = "{\"role\":\"user\",\"content\":\"Give me 10 random dates in \\\"dd-yyyy-mm\\\" format.\"}";
+const string message = "{\"role\":\"user\",\"content\":\"Tell me a short story.\"}";
 TaskCompletionSource<bool> completionSource = new();
 
 StringBuilder sb = new();
