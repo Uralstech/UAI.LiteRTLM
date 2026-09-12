@@ -64,7 +64,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
             return dataSize switch
             {
                 <= 5 * 1024 when Awaitable.MainThreadAsync().IsCompleted => Allocator.Temp,
-                > 20 * 1024 * 1024 => Allocator.TempJob,
+                <= 20 * 1024 * 1024 => Allocator.TempJob,
                 _ => Allocator.Persistent,
             };
         }

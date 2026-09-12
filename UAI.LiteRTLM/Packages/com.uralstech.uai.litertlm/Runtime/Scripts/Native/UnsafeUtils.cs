@@ -25,27 +25,5 @@ namespace Uralstech.UAI.LiteRTLM.Native
 
         public static IntPtr MarshalDelegate<T>(T @delegate) where T : Delegate =>
             Marshal.GetFunctionPointerForDelegate(@delegate);
-
-        public static unsafe T[] CopyFrom<T>(IntPtr ptr, int length)
-            where T : unmanaged
-        {
-            T[] copy = new T[length];
-            
-            ReadOnlySpan<T> data = new((void*)ptr, length);
-            data.CopyTo(copy);
-
-            return copy;
-        }
-
-        public static unsafe long CopyTo<T>(IntPtr src, UIntPtr length, Span<T> dst)
-            where T : unmanaged
-        {
-            int copyLength = (int)length <= dst.Length
-                ? (int)length : dst.Length;
-            
-            ReadOnlySpan<T> srcSpan = new((void*)src, copyLength);
-            srcSpan.CopyTo(dst);
-            return copyLength;
-        }
     }
 }

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -118,7 +117,7 @@ namespace Uralstech.UAI.LiteRTLM
     public abstract class LiteRTLMNativeHandle : IDisposable
     {
         protected IntPtr Native { get; init; }
-        private int _disposed = 0;
+        private int _disposed;
         
         protected abstract void ReleaseUnmanagedResources();
         
@@ -1081,75 +1080,68 @@ namespace Uralstech.UAI.LiteRTLM
         }
     }
     
-    public sealed class Responses : LiteRTLMNativeHandle, IReadOnlyList<Responses.Candidate>
+    public sealed class Responses : LiteRTLMNativeHandle
     {
-        /// <param name="Text">The response text.</param>
-        /// <param name="HasScore">Does the response have a valid <see cref="Score"/>?</param>
-        /// <param name="Score">The response score.</param>
-        /// <param name="HasTokenLength">Does the response have a valid <see cref="TokenLength"/>?</param>
-        /// <param name="TokenLength">The token length of this response.</param>
-        /// <param name="HasTokenScores">Does the response have a valid <see cref="TokenScores"/>?</param>
-        /// <param name="TokenScores">The token scores for this response.</param>
-        public record Candidate(
-            string? Text,
-            bool HasScore, float Score,
-            bool HasTokenLength, int TokenLength,
-            bool HasTokenScores, float[]? TokenScores
-        );
-        
-        /// <inheritdoc/>
-        public int Count => GetNumCandidates();
-        
-        /// <inheritdoc/>
-        public Candidate this[int index] => GetCandidateAt(index);
+        public readonly ref struct Candidate
+        {
+            /// <summary>The response text.</summary>
+            public string? Text { get; init; }
+            
+            /// <summary>Does the response have a valid <see cref="Score"/>?</summary>
+            public bool HasScore { get; init; }
+            
+            /// <summary>The response score.</summary>
+            public float Score { get; init; }
+            
+            /// <summary>Does the response have a valid <see cref="TokenLength"/>?</summary>
+            public bool HasTokenLength { get; init; }
+            
+            /// <summary>The token length of this response.</summary>
+            public int TokenLength { get; init; }
+            
+            /// <summary>Does the response have a valid <see cref="TokenScores"/>?</summary>
+            public bool HasTokenScores { get; init; }
+            
+            /// <summary>The token scores for this response.</summary>
+            /// <remarks>Only valid for the lifetime of the <see cref="Responses"/> object that created this struct.</remarks>
+            public ReadOnlySpan<float> TokenScores { get; init; }
+        }
         
         internal Responses(IntPtr native)
         {
             Native = native;
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// The returned enumerator is only valid for the
-        /// lifetime of this <see cref="Responses"/> object.
-        /// </remarks>
-        public IEnumerator<Candidate> GetEnumerator()
-        {
-            int length = GetNumCandidates();
-            for (int i = 0; i < length; i++)
-                yield return GetCandidateAt(i);
-        }
+        /// <summary>Returns the number of response candidates.</summary>
+        public int Count => GetNumCandidates();
 
-        /// <inheritdoc/>
-        /// <remarks>
-        /// The returned enumerator is only valid for the
-        /// lifetime of this <see cref="Responses"/> object.
-        /// </remarks>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        private Candidate GetCandidateAt(int index)
+        /// <summary>Returns the response at a given index from the collection.</summary>
+        /// <param name="index">The index of the response.</param>
+        /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
+        public unsafe Candidate At(int index)
         {
-            string? response = GetResponseTextAt(index);
-                
+            string? text = GetResponseTextAt(index);
+            
             bool hasScore = HasScoreAt(index);
-            float score = hasScore ? GetScoreAt(index) : 0.0f;
-
+            float score = hasScore ? GetScoreAt(index) : 0;
+            
             bool hasTokenLength = HasTokenLengthAt(index);
             int tokenLength = hasTokenLength ? GetTokenLengthAt(index) : 0;
-                
+            
             bool hasTokenScores = HasTokenScoresAt(index);
-            float[]? tokenScores = hasTokenScores
-                ? UnsafeUtils.CopyFrom<float>(
-                    GetTokenScoresAt(index),
-                    GetNumTokenScoresAt(index)
-                ) : null;
-                
-            return new Candidate(
-                response,
-                hasScore, score,
-                hasTokenLength, tokenLength,
-                hasTokenScores, tokenScores
-            );
+            ReadOnlySpan<float> tokenScores = hasTokenScores
+                ? new ReadOnlySpan<float>((void*)GetTokenScoresAt(index), GetNumTokenScoresAt(index)) : ReadOnlySpan<float>.Empty;
+
+            return new Candidate
+            {
+                Text = text,
+                HasScore = hasScore,
+                Score = score,
+                HasTokenLength = hasTokenLength,
+                TokenLength = tokenLength,
+                HasTokenScores = hasTokenScores,
+                TokenScores = tokenScores,
+            };
         }
 
         /// <summary>Returns the number of response candidates.</summary>
@@ -1257,16 +1249,10 @@ namespace Uralstech.UAI.LiteRTLM
         public readonly struct Turn
         {
             /// <summary>The prefill/decode token count for this turn.</summary>
-            public readonly int TokenCount;
+            public int TokenCount { get; init; }
             
             /// <summary>The prefill/decode tokens per second for this turn.</summary>
-            public readonly double TokensPerSecond;
-
-            public Turn(int tokenCount, double tokensPerSecond)
-            {
-                TokenCount = tokenCount;
-                TokensPerSecond = tokensPerSecond;
-            }
+            public double TokensPerSecond { get; init; }
         }
         
         internal BenchmarkInfo(IntPtr native)
@@ -1296,37 +1282,35 @@ namespace Uralstech.UAI.LiteRTLM
         }
 
         /// <summary>Returns the benchmark information for each prefill turn.</summary>
-        public Turn[] GetPrefillTurns()
+        public IReadOnlyList<Turn> GetPrefillTurns()
         {
             ThrowIfDisposed();
             int length = GetNumPrefillTurns();
             Turn[] turns = new Turn[length];
 
             for (int i = 0; i < length; i++)
-            {
-                turns[i] = new Turn(
-                    GetPrefillTokenCountAt(i),
-                    GetPrefillTokensPerSecAt(i)
-                );
-            }
+                turns[i] = new Turn
+                {
+                    TokenCount = GetPrefillTokenCountAt(i),
+                    TokensPerSecond = GetPrefillTokensPerSecAt(i),
+                };
 
             return turns;
         }
         
         /// <summary>Returns the benchmark information for each decode turn.</summary>
-        public Turn[] GetDecodeTurns()
+        public IReadOnlyList<Turn> GetDecodeTurns()
         {
             ThrowIfDisposed();
             int length = GetNumDecodeTurns();
             Turn[] turns = new Turn[length];
 
             for (int i = 0; i < length; i++)
-            {
-                turns[i] = new Turn(
-                    GetDecodeTokenCountAt(i),
-                    GetDecodeTokensPerSecAt(i)
-                );
-            }
+                turns[i] = new Turn
+                {
+                    TokenCount = GetDecodeTokenCountAt(i),
+                    TokensPerSecond = GetDecodeTokensPerSecAt(i),
+                };
 
             return turns;
         }
@@ -1452,31 +1436,21 @@ namespace Uralstech.UAI.LiteRTLM
         {
             Native = native;
         }
-
-        /// <summary>The number of token ids from the tokenize result.</summary>
-        public int Length => (int)GetNumTokens();
-
-        /// <summary>Returns a span of the token ids.</summary>
+        
+        /// <summary>The token ids.</summary>
         /// <remarks>
         /// The returned span is only valid for the lifetime of this
         /// <see cref="TokenizeResult"/> object.
         /// </remarks>
-        public unsafe ReadOnlySpan<int> AsReadOnlySpan()
+        public unsafe ReadOnlySpan<int> Span
         {
-            int length = (int)GetNumTokens();
-            IntPtr ptr = GetTokens();
-            
-            return new ReadOnlySpan<int>((void*)ptr, length);
-        }
-
-        /// <summary>Copies the token ids into <paramref name="span"/>.</summary>
-        /// <returns>The number of copied elements.</returns>
-        public long CopyTo(Span<int> span)
-        {
-            UIntPtr length = GetNumTokens();
-            IntPtr ptr = GetTokens();
-            
-            return UnsafeUtils.CopyTo(ptr, length, span);
+            get
+            {
+                int count = (int)GetNumTokens();
+                return count > 0
+                    ? new ReadOnlySpan<int>((void*)GetTokens(), count)
+                    : ReadOnlySpan<int>.Empty;
+            }
         }
 
         /// <summary>Returns the token ids from a tokenize result.</summary>
@@ -1558,14 +1532,14 @@ namespace Uralstech.UAI.LiteRTLM
         }
 
         /// <summary>Returns the token ids from a token union.</summary>
-        /// <param name="tokenIds">The token IDs.</param>
+        /// <param name="tokenIds">The token IDs. Only valid for the lifetime of this <see cref="TokenUnion"/> object.</param>
         /// <returns>0 on success, non-zero if the token union does not contain token ids.</returns>
-        public int GetIds(out int[]? tokenIds)
+        public unsafe int GetIds(out ReadOnlySpan<int> tokenIds)
         {
             ThrowIfDisposed();
             
             int result = NativeAPI.TokenUnion.litert_lm_token_union_get_ids(Native, out IntPtr ptr, out UIntPtr length);
-            tokenIds = result == 0 ? UnsafeUtils.CopyFrom<int>(ptr, (int)length) : null;
+            tokenIds = result == 0 ? new ReadOnlySpan<int>((void*)ptr, (int)length) : null;
             return result;
         }
 
@@ -1583,22 +1557,15 @@ namespace Uralstech.UAI.LiteRTLM
             Native = native;
         }
 
-        /// <summary>Gets the token unions in this collection.</summary>
-        /// <returns>
-        /// The token union wrappers in the collection. The caller is responsible for
-        /// disposing each returned wrapper.
-        /// </returns>
-        public TokenUnion[] GetTokenUnions()
-        {
-            int length = (int)GetNumTokens();
-            TokenUnion[] result = new TokenUnion[length];
+        /// <summary>Gets the number of token unions in this collection.</summary>
+        public int Count => (int)GetNumTokens();
 
-            for (int i = 0; i < length; i++)
-                result[i] = GetTokenAt((UIntPtr)i)!;
-
-            return result;
-        }
-
+        /// <summary>Returns the token union at a given index from the collection.</summary>
+        /// <param name="index">The index of the token union.</param>
+        /// <returns>The token union wrapper at the given index. The caller is responsible for disposing the returned wrapper.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
+        public TokenUnion At(int index) => GetTokenAt((UIntPtr)index);
+        
         /// <summary>Returns the number of token unions in the collection.</summary>
         /// <returns>The number of token unions.</returns>
         private UIntPtr GetNumTokens()
@@ -1607,18 +1574,16 @@ namespace Uralstech.UAI.LiteRTLM
             return NativeAPI.TokenUnions.litert_lm_token_unions_get_num_tokens(Native);
         }
 
-        /// <summary>Returns the token union at a given index from a collection.</summary>
+        /// <summary>Returns the token union at a given index from the collection.</summary>
         /// <param name="index">The index of the token union.</param>
-        /// <returns>
-        /// The token union wrapper at the given index, or <see langword="null"/> if the index
-        /// is out of bounds. The caller is responsible for disposing the returned wrapper.
-        /// </returns>
-        private TokenUnion? GetTokenAt(UIntPtr index)
+        /// <returns>The token union wrapper at the given index. The caller is responsible for disposing the returned wrapper.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown if the index is out of bounds.</exception>
+        private TokenUnion GetTokenAt(UIntPtr index)
         {
             ThrowIfDisposed();
             
             IntPtr ptr = NativeAPI.TokenUnions.litert_lm_token_unions_get_token_at(Native, index);
-            return ptr != IntPtr.Zero ? new TokenUnion(ptr) : null;
+            return ptr != IntPtr.Zero ? new TokenUnion(ptr) : throw new IndexOutOfRangeException();
         }
         
         protected override void ReleaseUnmanagedResources()
@@ -2153,6 +2118,249 @@ namespace Uralstech.UAI.LiteRTLM
         {
             if (Native != IntPtr.Zero)
                 NativeAPI.Capabilities.litert_lm_loaded_file_delete(Native);
+        }
+    }
+
+    public sealed class EmbeddingEngineSettings : LiteRTLMNativeHandle
+    {
+        /// <summary>
+        /// Creates managed embedding engine settings from a model path.
+        /// The caller is responsible for disposing the wrapper using
+        /// <see cref="LiteRTLMNativeHandle.Dispose"/>.
+        /// </summary>
+        /// <param name="modelPath">The path to the model file.</param>
+        /// <param name="backend">The backend to use (e.g., "cpu", "gpu", "npu").</param>
+        /// <param name="visionBackend">The vision backend to use, or <see langword="null"/> if not set.</param>
+        /// <param name="audioBackend">The audio backend to use, or <see langword="null"/> if not set.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the native object could not be created.</exception>
+        public EmbeddingEngineSettings(string modelPath, string backend,
+            string? visionBackend = null, string? audioBackend = null)
+        {
+            if (string.IsNullOrEmpty(modelPath))
+                throw new ArgumentException("Model path cannot be null or empty.", nameof(modelPath));
+            
+            if (string.IsNullOrEmpty(backend))
+                throw new ArgumentException("Backend cannot be null or empty.", nameof(backend));
+
+            Native = NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_create(modelPath,
+                backend, visionBackend, audioBackend);
+            
+            if (Native == IntPtr.Zero)
+                throw new InvalidOperationException("Failed to create native embedding engine settings.");
+        }
+
+        /// <summary>Sets the number of threads for the audio CPU backend in Embedding Engine Settings.</summary>
+        /// <param name="numThreads">The number of threads.</param>
+        public void SetAudioNumThreads(int numThreads)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_audio_num_threads(Native, numThreads);
+        }
+
+        /// <summary>Sets the cache directory for the Embedding Engine.</summary>
+        /// <param name="cacheDir">The cache directory.</param>
+        public void SetCacheDir(string cacheDir)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_cache_dir(Native, cacheDir);
+        }
+
+        /// <summary>Sets the LiteRT dispatch library directory for the main NPU backend.</summary>
+        /// <param name="libDir">The dispatch library directory.</param>
+        public void SetLitertDispatchLibDir(string libDir)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_litert_dispatch_lib_dir(Native, libDir);
+        }
+
+        /// <summary>Sets the LiteRT dispatch library directory for the vision NPU backend.</summary>
+        /// <param name="libDir">The dispatch library directory.</param>
+        public void SetVisionLitertDispatchLibDir(string libDir)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_vision_litert_dispatch_lib_dir(Native, libDir);
+        }
+        
+        /// <summary>Sets the LiteRT dispatch library directory for the audio NPU backend.</summary>
+        /// <param name="libDir">The dispatch library directory.</param>
+        public void SetAudioLitertDispatchLibDir(string libDir)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_audio_litert_dispatch_lib_dir(Native, libDir);
+        }
+
+        /// <summary>Sets the maximum sequence length (in tokens) for text encoder signatures in Embedding Engine Settings.</summary>
+        /// <param name="maxInputLength">The maximum input length. Passing a non-positive value unsets the option.</param>
+        public void SetMaxInputLength(int maxInputLength)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_max_input_length(Native, maxInputLength);
+        }
+
+        /// <summary>Sets the desired number of vision tokens generated per image in Embedding Engine Settings.</summary>
+        /// <param name="visionTokensPerImage">The vision tokens per image. Passing a non-positive value unsets the option.</param>
+        public void SetVisionTokensPerImage(int visionTokensPerImage)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_vision_tokens_per_image(Native, visionTokensPerImage);
+        }
+        
+        protected override void ReleaseUnmanagedResources()
+        {
+            if (Native != IntPtr.Zero)
+                NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_delete(Native);
+        }
+    }
+
+    public sealed class EmbeddingOptions : LiteRTLMNativeHandle
+    {
+        /// <summary>
+        /// Creates a managed wrapper around a LiteRT LM embedding options object.
+        /// The caller is responsible for disposing the wrapper using
+        /// <see cref="LiteRTLMNativeHandle.Dispose"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the native object could not be created.</exception>
+        public EmbeddingOptions()
+        {
+            Native = NativeAPI.EmbeddingOptions.litert_lm_embedding_options_create();
+            if (Native == IntPtr.Zero)
+                throw new InvalidOperationException("Failed to create native embedding options.");
+        }
+
+        /// <summary>Whether the embedding should be L2 normalized.</summary>
+        public bool Normalize
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return NativeAPI.EmbeddingOptions.litert_lm_embedding_options_get_normalize(Native);
+            }
+            set
+            {
+                ThrowIfDisposed();
+                NativeAPI.EmbeddingOptions.litert_lm_embedding_options_set_normalize(Native, value);
+            }
+        }
+
+        /// <summary>Whether special tokens (BOS, EOS, start/end of image, start/end of audio) should be automatically inserted.</summary>
+        public bool InsertSpecialTokens
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return NativeAPI.EmbeddingOptions.litert_lm_embedding_options_get_insert_special_tokens(Native);
+            }
+            set
+            {
+                ThrowIfDisposed();
+                NativeAPI.EmbeddingOptions.litert_lm_embedding_options_set_insert_special_tokens(Native, value);
+            }
+        }
+
+        /// <summary>The input overflow strategy.</summary>
+        public InputOverflowStrategy InputOverflowStrategy
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return NativeAPI.EmbeddingOptions.litert_lm_embedding_options_get_input_overflow_strategy(Native);
+            }
+            set
+            {
+                ThrowIfDisposed();
+                NativeAPI.EmbeddingOptions.litert_lm_embedding_options_set_input_overflow_strategy(Native, value);
+            }
+        }
+
+        /// <summary>The output embedding size to truncate the embedding to.</summary>
+        /// <remarks>
+        /// <para>Returns -1 if not set (using default size).</para>
+        /// <para>Pass 0 or a negative value (e.g., 0 or -1) to unset and use the default output embedding size.</para>
+        /// </remarks>
+        public int OutputSize
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return NativeAPI.EmbeddingOptions.litert_lm_embedding_options_get_output_size(Native);
+            }
+            set
+            {
+                ThrowIfDisposed();
+                NativeAPI.EmbeddingOptions.litert_lm_embedding_options_set_output_size(Native, value);
+            }
+        }
+
+        /// <summary>The vision tokens per image.</summary>
+        /// <remarks>
+        /// <para>Returns 0 if not set.</para>
+        /// <para>Passing a non-positive value unsets the option.</para>
+        /// </remarks>
+        public int VisionTokensPerImage
+        {
+            get
+            {
+                ThrowIfDisposed();
+                return NativeAPI.EmbeddingOptions.litert_lm_embedding_options_get_vision_tokens_per_image(Native);
+            }
+            set
+            {
+                ThrowIfDisposed();
+                NativeAPI.EmbeddingOptions.litert_lm_embedding_options_set_vision_tokens_per_image(Native, value);
+            }
+        }
+        
+        protected override void ReleaseUnmanagedResources()
+        {
+            if (Native != IntPtr.Zero)
+                NativeAPI.EmbeddingOptions.litert_lm_embedding_options_delete(Native);
+        }
+    }
+
+    public sealed class EmbeddingResponse : LiteRTLMNativeHandle
+    {
+        internal EmbeddingResponse(IntPtr native)
+        {
+            Native = native;
+        }
+        
+        /// <summary>The response.</summary>
+        /// <remarks>
+        /// The returned span is only valid for the lifetime of this
+        /// <see cref="EmbeddingResponse"/> object.
+        /// </remarks>
+        public unsafe ReadOnlySpan<float> Span
+        {
+            get
+            {
+                int count = (int)GetSize();
+                return count > 0
+                    ? new ReadOnlySpan<float>((void*)GetValues(), count)
+                    : ReadOnlySpan<float>.Empty;
+            }
+        }
+
+        /// <summary>Returns the dimension (number of float values) of the embedding response.</summary>
+        /// <returns>Number of float elements.</returns>
+        private UIntPtr GetSize()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.EmbeddingResponse.litert_lm_embedding_response_get_size(Native);
+        }
+
+        /// <summary>Returns a pointer to the array of float embedding values.</summary>
+        /// <remarks>The returned pointer is owned by the <see cref="EmbeddingResponse"/> object and valid for its lifetime.</remarks>
+        /// <returns>Pointer to float array, or <see cref="IntPtr.Zero"/> if empty.</returns>
+        private IntPtr GetValues()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.EmbeddingResponse.litert_lm_embedding_response_get_values(Native);
+        }
+        
+        protected override void ReleaseUnmanagedResources()
+        {
+            if (Native != IntPtr.Zero)
+                NativeAPI.EmbeddingResponse.litert_lm_embedding_response_delete(Native);
         }
     }
 
