@@ -14,7 +14,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Uralstech.UAI.LiteRTLM.Native;
 
@@ -23,7 +22,10 @@ internal static class PackageUnsafeUtils
     /// <remarks>Use EXCLUSIVELY in <c>using</c> statements</remarks>
     internal readonly struct TempMem : IDisposable
     {
+        /// <summary>The pointer.</summary>
         public readonly IntPtr Ptr;
+            
+        /// <summary>Size in bytes.</summary>
         public readonly UIntPtr Size;
 
         public TempMem(IntPtr ptr, UIntPtr size)
@@ -37,14 +39,14 @@ internal static class PackageUnsafeUtils
     }
     
     /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
-    public static unsafe TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
+    public static unsafe TempMem Allocate<T>(int count, out Span<T> span)
+        where T : unmanaged
     {
-        int size = Encoding.UTF8.GetByteCount(str);
+        UIntPtr size = (UIntPtr)(Marshal.SizeOf<T>() * count);
         
-        void* allocated = NativeMemory.Alloc((UIntPtr)size);
-        Span<byte> allocatedSpan = new(allocated, size);
-        
-        Encoding.UTF8.GetBytes(str, allocatedSpan[..size]);
-        return new TempMem((IntPtr)allocated, (UIntPtr)size);
+        void* allocated = NativeMemory.Alloc(size);
+        span = new Span<T>(allocated, count);
+            
+        return new TempMem((IntPtr)allocated, size);
     }
 }

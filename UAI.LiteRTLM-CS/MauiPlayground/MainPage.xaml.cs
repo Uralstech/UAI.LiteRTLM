@@ -86,8 +86,8 @@ public partial class MainPage : ContentPage
             return;
         }
         
-        BenchmarkInfo.Turn[] prefillTurns = benchmarkInfo.GetPrefillTurns();
-        BenchmarkInfo.Turn[] decodeTurns = benchmarkInfo.GetDecodeTurns();
+        IReadOnlyList<BenchmarkInfo.Turn> prefillTurns = benchmarkInfo.GetPrefillTurns();
+        IReadOnlyList<BenchmarkInfo.Turn> decodeTurns = benchmarkInfo.GetDecodeTurns();
 
         Console.WriteLine("Benchmark info:"
                           + $"\n\tInitialization time: {benchmarkInfo.GetTotalInitTime()}"

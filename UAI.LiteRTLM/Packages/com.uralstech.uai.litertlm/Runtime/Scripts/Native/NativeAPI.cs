@@ -1656,16 +1656,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern IntPtr litert_lm_embedding_engine_create(IntPtr settings);
         
-            /// <summary>
-            /// Destroys a LiteRT LM Embedding Engine.
-            /// </summary>
+            /// <summary>Destroys a LiteRT LM Embedding Engine.</summary>
             /// <param name="engine">The engine to destroy.</param>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_embedding_engine_delete(IntPtr engine);
         
-            /// <summary>
-            /// Computes embedding response for a single request.
-            /// </summary>
+            /// <summary>Computes embedding response for a single request.</summary>
             /// <param name="engine">The embedding engine.</param>
             /// <param name="inputs">Array of LiteRtLmInputData pointers representing multimodal input.</param>
             /// <param name="numInputs">Number of inputs in the array.</param>
@@ -1676,11 +1672,9 @@ namespace Uralstech.UAI.LiteRTLM.Native
             /// </returns>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern IntPtr litert_lm_embedding_engine_compute_embedding(IntPtr engine,
-                IntPtr inputs, UIntPtr numInputs, IntPtr options);
+                IntPtr[] inputs, UIntPtr numInputs, IntPtr options);
         
-            /// <summary>
-            /// Computes embedding responses for a batch of requests.
-            /// </summary>
+            /// <summary>Computes embedding responses for a batch of requests.</summary>
             /// <param name="engine">The embedding engine.</param>
             /// <param name="inputsBatch">An array of arrays of LiteRtLmInputData pointers.</param>
             /// <param name="numInputsPerBatch">An array specifying the number of inputs for each request in the batch.</param>
@@ -1692,7 +1686,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
             /// </returns>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern IntPtr litert_lm_embedding_engine_compute_embedding_batch(IntPtr engine,
-                IntPtr inputsBatch, IntPtr numInputsPerBatch, UIntPtr batchSize, IntPtr options);
+                IntPtr[] inputsBatch, UIntPtr[] numInputsPerBatch, UIntPtr batchSize, IntPtr options);
         }
 
         /// <summary>

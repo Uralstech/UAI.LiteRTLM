@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Uralstech.UAI.LiteRTLM;
@@ -79,8 +80,8 @@ if (benchmarkInfo == null)
     return;
 }
 
-BenchmarkInfo.Turn[] prefillTurns = benchmarkInfo.GetPrefillTurns();
-BenchmarkInfo.Turn[] decodeTurns = benchmarkInfo.GetDecodeTurns();
+IReadOnlyList<BenchmarkInfo.Turn> prefillTurns = benchmarkInfo.GetPrefillTurns();
+IReadOnlyList<BenchmarkInfo.Turn> decodeTurns = benchmarkInfo.GetDecodeTurns();
 
 Console.WriteLine("Benchmark info:"
           + $"\n\tInitialization time: {benchmarkInfo.GetTotalInitTime()}"

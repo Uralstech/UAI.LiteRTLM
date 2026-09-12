@@ -90,10 +90,10 @@ namespace Uralstech.UAI.LiteRTLM
 
     internal static class Extensions
     {
-        public static IntPtr[] GetPtrs<T>(this ReadOnlySpan<T> handles)
+        public static IntPtr[] GetPtrs<T>(this IReadOnlyList<T> handles)
             where T : LiteRTLMNativeHandle
         {
-            int length = handles.Length;
+            int length = handles.Count;
             IntPtr[] handlePtrs = new IntPtr[length];
 
             for (int i = 0; i < length; i++)
@@ -592,7 +592,7 @@ namespace Uralstech.UAI.LiteRTLM
             if (string.IsNullOrEmpty(data))
                 throw new ArgumentException("Data cannot be null or empty.", nameof(data));
             
-            using PackageUnsafeUtils.TempMem tempMem = PackageUnsafeUtils.AllocateStringUTF8(data);
+            using PackageUnsafeUtils.TempMem tempMem = UnsafeUtils.AllocateStringUTF8(data);
             Native = NativeAPI.InputData.litert_lm_input_data_create(InputDataType.Text, tempMem.Ptr, tempMem.Size);
             
             if (Native == IntPtr.Zero)
@@ -1051,10 +1051,10 @@ namespace Uralstech.UAI.LiteRTLM
         /// </summary>
         /// <param name="inputs">An array of input wrappers representing multimodal input.</param>
         /// <returns>0 on success, non-zero on failure.</returns>
-        public int RunPrefill(ReadOnlySpan<InputData> inputs)
+        public int RunPrefill(IReadOnlyList<InputData> inputs)
         {
             ThrowIfDisposed();
-            return NativeAPI.Session.litert_lm_session_run_prefill(Native, inputs.GetPtrs(), (UIntPtr)inputs.Length);
+            return NativeAPI.Session.litert_lm_session_run_prefill(Native, inputs.GetPtrs(), (UIntPtr)inputs.Count);
         }
 
         /// <summary>
@@ -1095,10 +1095,10 @@ namespace Uralstech.UAI.LiteRTLM
         /// The responses wrapper, or <see langword="null"/> on failure.
         /// The caller is responsible for disposing the returned wrapper.
         /// </returns>
-        public Responses? GenerateContent(ReadOnlySpan<InputData> inputs)
+        public Responses? GenerateContent(IReadOnlyList<InputData> inputs)
         {
             ThrowIfDisposed();
-            IntPtr ptr = NativeAPI.Session.litert_lm_session_generate_content(Native, inputs.GetPtrs(), (UIntPtr)inputs.Length);
+            IntPtr ptr = NativeAPI.Session.litert_lm_session_generate_content(Native, inputs.GetPtrs(), (UIntPtr)inputs.Count);
             return ptr != IntPtr.Zero ? new Responses(ptr) : null;
         }
 
@@ -1142,13 +1142,13 @@ namespace Uralstech.UAI.LiteRTLM
         /// <param name="inputs">An array of input wrappers representing multimodal input.</param>
         /// <param name="callback">The callback function (<see cref="StreamCallback"/>) that receives response chunks.</param>
         /// <returns>0 on success, non-zero on failure to start the stream.</returns>
-        public int GenerateContentStream(ReadOnlySpan<InputData> inputs, StreamCallback callback)
+        public int GenerateContentStream(IReadOnlyList<InputData> inputs, StreamCallback callback)
         {
             ThrowIfDisposed();
             
             IntPtr callbackData = StreamCallbackHandler.Register(callback);
             int result = NativeAPI.Session.litert_lm_session_generate_content_stream(Native,
-                inputs.GetPtrs(), (UIntPtr)inputs.Length, StreamCallbackHandler.GetGlobalStreamCallbackListenerPtr(), callbackData);
+                inputs.GetPtrs(), (UIntPtr)inputs.Count, StreamCallbackHandler.GetGlobalStreamCallbackListenerPtr(), callbackData);
             
             if (result != 0)
                 StreamCallbackHandler.Deregister(callbackData);
@@ -2501,6 +2501,87 @@ namespace Uralstech.UAI.LiteRTLM
         {
             if (Native != IntPtr.Zero)
                 NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_delete(Native);
+        }
+    }
+
+    public sealed class EmbeddingEngine : LiteRTLMNativeHandle
+    {
+        /// <summary>
+        /// Creates a managed wrapper around a LiteRT LM embedding engine from the given settings.
+        /// The caller is responsible for disposing the wrapper using <see cref="LiteRTLMNativeHandle.Dispose"/>.
+        /// </summary>
+        /// <param name="settings">The engine settings.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the native object could not be created.</exception>
+        public EmbeddingEngine(EmbeddingEngineSettings settings)
+        {
+            Native = NativeAPI.EmbeddingEngine.litert_lm_embedding_engine_create(settings);
+            if (Native == IntPtr.Zero)
+                throw new InvalidOperationException("Failed to create native embedding engine.");
+        }
+        
+        /// <summary>Computes embedding response for a single request.</summary>
+        /// <param name="inputs">Array of <see cref="InputData"/> representing multimodal input.</param>
+        /// <param name="options">Optional embedding options. If <see langword="null"/>, default options are used.</param>
+        /// <returns>
+        /// The embedding response, or <see langword="null"/> on failure.
+        /// The caller is responsible for deleting the response using <see cref="LiteRTLMNativeHandle.Dispose"/>.
+        /// </returns>
+        public EmbeddingResponse? ComputeEmbedding(IReadOnlyList<InputData> inputs, EmbeddingOptions? options = null)
+        {
+            ThrowIfDisposed();
+            
+            IntPtr ptr = NativeAPI.EmbeddingEngine.litert_lm_embedding_engine_compute_embedding(Native, inputs.GetPtrs(), (UIntPtr)inputs.Count, options);
+            return ptr != IntPtr.Zero ? new EmbeddingResponse(ptr, isDisposable: true) : null;
+        }
+        
+        /// <summary>Computes embedding responses for a batch of requests.</summary>
+        /// <param name="inputBatches">An array of arrays of <see cref="InputData"/>.</param>
+        /// <param name="options">Optional embedding options. If <see langword="null"/>, default options are used.</param>
+        /// <returns>
+        /// The batch responses, or <see langword="null"/> on failure.
+        /// The caller is responsible for deleting responses using <see cref="LiteRTLMNativeHandle.Dispose"/>.
+        /// </returns>
+        public EmbeddingResponses? ComputeEmbeddingBatch(IReadOnlyList<IReadOnlyList<InputData>> inputBatches,
+            EmbeddingOptions? options = null)
+        {
+            ThrowIfDisposed();
+            
+            int batches = inputBatches.Count;
+            PackageUnsafeUtils.TempMem?[] allocatedMemory = new PackageUnsafeUtils.TempMem?[batches];
+            UIntPtr[] arraySizes = new UIntPtr[batches];
+            IntPtr[] arrays = new IntPtr[batches];
+            
+            try
+            {
+                for (int i = 0; i < batches; i++)
+                {
+                    IReadOnlyList<InputData> batch = inputBatches[i];
+                    int batchSize = batch.Count;
+
+                    PackageUnsafeUtils.TempMem memory = PackageUnsafeUtils.Allocate(batchSize, out Span<IntPtr> span);
+                    
+                    allocatedMemory[i] = memory;
+                    arraySizes[i] = (UIntPtr)batchSize;
+                    arrays[i] = memory.Ptr;
+
+                    for (int j = 0; j < batchSize; j++)
+                        span[j] = batch[j];
+                }
+                
+                IntPtr ptr = NativeAPI.EmbeddingEngine.litert_lm_embedding_engine_compute_embedding_batch(Native, arrays, arraySizes, (UIntPtr)batches, options);
+                return ptr != IntPtr.Zero ? new EmbeddingResponses(ptr) : null;
+            }
+            finally
+            {
+                foreach (PackageUnsafeUtils.TempMem? memory in allocatedMemory)
+                    memory?.Dispose();
+            }
+        }
+
+        protected override void ReleaseUnmanagedResources()
+        {
+            if (Native != IntPtr.Zero)
+                NativeAPI.EmbeddingEngine.litert_lm_embedding_engine_delete(Native);
         }
     }
 

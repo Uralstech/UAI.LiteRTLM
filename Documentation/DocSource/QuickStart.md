@@ -74,6 +74,8 @@ data to streamed operations because the wrappers use their own data to track man
 
 # [v0.17.0](#tab/litert-lm-notes-v0170)
 
+`2.5.0-preview.2+` expose all LiteRT-LM C APIs and contain multiple bugfixes, but also breaking changes. Review the release notes for more details.
+
 `2.5.0-preview.1` does not expose the [`experimental`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/experimental.h) and [`embedding_engine`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/embedding_engine.h) APIs.
 
 # [v0.16.1/v0.16.0](#tab/litert-lm-notes-v0161-v0160)
@@ -108,11 +110,9 @@ To enable GPU acceleration on Android, add the following to the `<application>` 
 
 ## NuGet Package / .NET 6+
 
-Starting with `2.2.0-preview.2`, UAI.LiteRTLM is also available on NuGet for .NET 6+! It supports all the same platforms as the Unity package, and
-works with MAUI. The Unity package is still the main development target, so the NuGet/.NET package may sometimes lag behind and not have all the
-latest features yet.
+Starting with `2.2.0-preview.2`, UAI.LiteRTLM is also available on NuGet for .NET 6+! It supports all the same platforms as the Unity package, and works with MAUI.
 
-Because the package includes some Unity-specific workarounds, using the NuGet package requires a small amount of additional setup.
+Because the main package includes some Unity-specific workarounds, using the NuGet package requires a small amount of additional setup.
 Before creating the `Engine`, call `Accelerators.LoadNativeLibraries()` to pre-load the native accelerator libraries.
 You only need to call this method once; subsequent calls are no-ops.
 
@@ -184,8 +184,8 @@ private async Awaitable RunConversation()
         return;
     }
 
-    BenchmarkInfo.Turn[] prefillTurns = benchmarkInfo.GetPrefillTurns();
-    BenchmarkInfo.Turn[] decodeTurns = benchmarkInfo.GetDecodeTurns();
+    IReadOnlyList<BenchmarkInfo.Turn> prefillTurns = benchmarkInfo.GetPrefillTurns();
+    IReadOnlyList<BenchmarkInfo.Turn> decodeTurns = benchmarkInfo.GetDecodeTurns();
     
     Debug.Log("Benchmark info:"
               + $"\n\tInitialization time: {benchmarkInfo.GetTotalInitTime()}"

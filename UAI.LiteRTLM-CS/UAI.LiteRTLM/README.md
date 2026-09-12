@@ -9,11 +9,9 @@ Cross-platform LiteRT-LM bindings for Unity & .NET apps.
 
 ## Notice
 
-Starting with `2.2.0-preview.2`, UAI.LiteRTLM is also available on NuGet for .NET 6+! It supports all the same platforms as the Unity package, and
-works with MAUI. The Unity package is still the main development target, so the NuGet/.NET package may sometimes lag behind and not have all the
-latest features yet.
+Starting with `2.2.0-preview.2`, UAI.LiteRTLM is also available on NuGet for .NET 6+! It supports all the same platforms as the Unity package, and works with MAUI.
 
-Because the package includes some Unity-specific workarounds, using the NuGet package requires a small amount of additional setup.
+Because the main package includes some Unity-specific workarounds, using the NuGet package requires a small amount of additional setup.
 Before creating the `Engine`, call `Accelerators.LoadNativeLibraries()` to pre-load the native accelerator libraries.
 You only need to call this method once; subsequent calls are no-ops.
 

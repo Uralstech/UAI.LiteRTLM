@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -23,13 +22,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
 {
     internal static class PackageUnsafeUtils
     {
-        private static readonly int s_byteAlignment = UnsafeUtility.AlignOf<byte>();
-
         /// <remarks>Use EXCLUSIVELY in <c>using</c> statements</remarks>
         internal readonly struct TempMem : IDisposable
         {
+            /// <summary>The pointer.</summary>
             public readonly IntPtr Ptr;
+            
+            /// <summary>Size in bytes.</summary>
             public readonly UIntPtr Size;
+            
             private readonly Allocator _allocator;
 
             public TempMem(IntPtr ptr, UIntPtr size, Allocator allocator)
@@ -42,17 +43,19 @@ namespace Uralstech.UAI.LiteRTLM.Native
             public unsafe void Dispose() =>
                 UnsafeUtility.Free((void*)Ptr, _allocator);
         }
-        
+
         /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
-        public static unsafe TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
+        public static unsafe TempMem Allocate<T>(int count, out Span<T> span)
+            where T : unmanaged
         {
-            int size = Encoding.UTF8.GetByteCount(str);
+            int align = UnsafeUtility.AlignOf<T>();
+            int size = UnsafeUtility.SizeOf<T>() * count;
+            
             Allocator allocator = ChooseAllocator(size);
             
-            void* allocated = UnsafeUtility.Malloc(size, s_byteAlignment, allocator);
-            Span<byte> allocatedSpan = new(allocated, size);
+            void* allocated = UnsafeUtility.Malloc(size, align, allocator);
+            span = new Span<T>(allocated, count);
             
-            Encoding.UTF8.GetBytes(str, allocatedSpan[..size]);
             return new TempMem((IntPtr)allocated, (UIntPtr)size, allocator);
         }
 

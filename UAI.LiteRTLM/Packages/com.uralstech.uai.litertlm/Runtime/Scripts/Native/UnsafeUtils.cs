@@ -14,6 +14,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 #nullable enable
 namespace Uralstech.UAI.LiteRTLM.Native
@@ -25,5 +26,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
 
         public static IntPtr MarshalDelegate<T>(T @delegate) where T : Delegate =>
             Marshal.GetFunctionPointerForDelegate(@delegate);
+        
+        /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
+        public static PackageUnsafeUtils.TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
+        {
+            int count = Encoding.UTF8.GetByteCount(str);
+            
+            PackageUnsafeUtils.TempMem mem = PackageUnsafeUtils.Allocate(count, out Span<byte> span);
+            Encoding.UTF8.GetBytes(str, span[..count]);
+            return mem;
+        }
     }
 }
