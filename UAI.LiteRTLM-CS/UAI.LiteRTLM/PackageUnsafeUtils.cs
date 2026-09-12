@@ -39,15 +39,12 @@ internal static class PackageUnsafeUtils
     /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
     public static unsafe TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
     {
-        int strSize = Encoding.UTF8.GetByteCount(str);
-        UIntPtr totalSize = (UIntPtr)(strSize + 1);
+        int size = Encoding.UTF8.GetByteCount(str);
         
-        void* allocated = NativeMemory.Alloc(totalSize);
-        Span<byte> allocatedSpan = new(allocated, (int)totalSize);
+        void* allocated = NativeMemory.Alloc((UIntPtr)size);
+        Span<byte> allocatedSpan = new(allocated, size);
         
-        Encoding.UTF8.GetBytes(str, allocatedSpan[..strSize]);
-        allocatedSpan[strSize] = 0;
-
-        return new TempMem((IntPtr)allocated, totalSize);
+        Encoding.UTF8.GetBytes(str, allocatedSpan[..size]);
+        return new TempMem((IntPtr)allocated, (UIntPtr)size);
     }
 }

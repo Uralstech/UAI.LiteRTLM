@@ -46,17 +46,14 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
         public static unsafe TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
         {
-            int strSize = Encoding.UTF8.GetByteCount(str);
-            int totalSize = strSize + 1;
+            int size = Encoding.UTF8.GetByteCount(str);
+            Allocator allocator = ChooseAllocator(size);
             
-            Allocator allocator = ChooseAllocator(totalSize);
-            void* allocated = UnsafeUtility.Malloc(totalSize, s_byteAlignment, allocator);
-            Span<byte> allocatedSpan = new(allocated, totalSize);
+            void* allocated = UnsafeUtility.Malloc(size, s_byteAlignment, allocator);
+            Span<byte> allocatedSpan = new(allocated, size);
             
-            Encoding.UTF8.GetBytes(str, allocatedSpan[..strSize]);
-            allocatedSpan[strSize] = 0;
-
-            return new TempMem((IntPtr)allocated, (UIntPtr)totalSize, allocator);
+            Encoding.UTF8.GetBytes(str, allocatedSpan[..size]);
+            return new TempMem((IntPtr)allocated, (UIntPtr)size, allocator);
         }
 
         private static Allocator ChooseAllocator(int dataSize)

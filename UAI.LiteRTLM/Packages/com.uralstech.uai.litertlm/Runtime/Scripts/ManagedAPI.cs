@@ -158,6 +158,74 @@ namespace Uralstech.UAI.LiteRTLM
                 throw new ObjectDisposedException(GetType().Name);
         }
     }
+
+    /// <summary>
+    /// Utility methods to manually construct wrappers
+    /// from pointers for types which don't have a native <c>_create</c> method.
+    /// Use at your own risk.
+    /// </summary>
+    public static class LiteRTLMNativeHandleFactory
+    {
+        public static Session SessionFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new Session(ptr);
+        }
+
+        public static Responses ResponsesFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new Responses(ptr);
+        }
+
+        public static BenchmarkInfo BenchmarkInfoFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new BenchmarkInfo(ptr);
+        }
+
+        public static TokenizeResult TokenizeResultFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new TokenizeResult(ptr);
+        }
+
+        public static DetokenizeResult DetokenizeResultFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new DetokenizeResult(ptr);
+        }
+
+        public static TokenUnion TokenUnionFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new TokenUnion(ptr);
+        }
+
+        public static TokenUnions TokenUnionsFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new TokenUnions(ptr);
+        }
+
+        public static JsonResponse JsonResponseFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new JsonResponse(ptr);
+        }
+
+        public static EmbeddingResponse EmbeddingResponseFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new EmbeddingResponse(ptr);
+        }
+
+        private static void ThrowIfNullPtr(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+                throw new ArgumentException("Native pointer cannot be IntPtr.Zero.", nameof(ptr));
+        }
+    }
     
     public sealed class SamplerParams : LiteRTLMNativeHandle
     {
@@ -2383,6 +2451,7 @@ namespace Uralstech.UAI.LiteRTLM
         /// <returns>The relative capture directory string.</returns>
         public string? GetCaptureDir()
         {
+            ThrowIfDisposed();
             IntPtr ptr = NativeAPI.Experimental.litert_lm_experimental_session_debug_info_get_capture_dir(Native);
             return ptr != IntPtr.Zero ? UnsafeUtils.MarshalStringUTF8(ptr) : null;
         }
