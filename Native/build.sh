@@ -29,10 +29,11 @@ build() {
 patch_prebuilt_lib_android() {
     local arch="$1"
     local lib="$2"
+    local needed="$3"
     local dst="${PLUGIN_DIR}/Android/${arch}/${lib}.so"
 
-    if ! patchelf --print-needed "${dst}" | grep -q "^${BUILT_SYMBOL}\.so$"; then
-        patchelf --add-needed "${BUILT_SYMBOL}.so" "${dst}"
+    if ! patchelf --print-needed "${dst}" | grep -q "^${needed}\.so$"; then
+        patchelf --add-needed "${needed}.so" "${dst}" || return 1
     fi
 }
 
@@ -88,8 +89,9 @@ copy_libs() {
 
 build android_arm64 --linkopt=-Wl,-z,max-page-size=16384 || exit 1
 copy_libs android arm64 so Android "${PREBUILT_LIBS_ANDROID}"
-patch_prebuilt_lib_android arm64 libLiteRtTopKOpenClSampler
 
+patch_prebuilt_lib_android arm64 libLiteRtTopKOpenClSampler "${BUILT_SYMBOL}" || exit 1
+patch_prebuilt_lib_android arm64 libLiteRtOpenClAccelerator "libandroid" || exit 1 # LiteRT-LM v0.17.0-specific
 
 # ------------------------------  macOS  ------------------------------
 
