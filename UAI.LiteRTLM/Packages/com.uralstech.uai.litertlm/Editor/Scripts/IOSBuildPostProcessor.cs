@@ -14,7 +14,6 @@
 
 #if UNITY_IOS
 
-using System;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -38,7 +37,9 @@ namespace Uralstech.UAI.LiteRTLM.Editor
             if (report.summary.platform != BuildTarget.iOS
                 || report.summary.buildType != BuildType.Player
                 || report.summary.result is BuildResult.Failed or BuildResult.Cancelled
+#pragma warning disable CS0618 // Type or member is obsolete
                 || PlayerSettings.iOS.simulatorSdkArchitecture == AppleMobileArchitectureSimulator.X86_64)
+#pragma warning restore CS0618 // Type or member is obsolete
                 return;
             
             string projectPath = PBXProject.GetPBXProjectPath(report.summary.outputPath);
@@ -46,15 +47,20 @@ namespace Uralstech.UAI.LiteRTLM.Editor
             PBXProject project = new();
             project.ReadFromFile(projectPath);
 
-            string libPath = (PlayerSettings.iOS.sdkVersion, PlayerSettings.xcodeProjectType) switch
+            string libPath;
+#if UNITY_6000_5_OR_NEWER
+            if (PlayerSettings.xcodeProjectType == XcodeProjectType.Swift)
             {
-                (iOSSdkVersion.DeviceSDK, XcodeProjectType.ObjectiveC) => DeviceLibPath,
-                (iOSSdkVersion.SimulatorSDK, XcodeProjectType.ObjectiveC) => SimLibPath,
-                (iOSSdkVersion.DeviceSDK, XcodeProjectType.Swift) => SwiftDeviceLibPath,
-                (iOSSdkVersion.SimulatorSDK, XcodeProjectType.Swift) => SwiftSimLibPath,
-                _ => throw new NotImplementedException($"Unknown iOS SDK/Xcode Project Type combination."),
-            };
-  
+                libPath = PlayerSettings.iOS.sdkVersion is iOSSdkVersion.DeviceSDK
+                    ? SwiftDeviceLibPath : SwiftSimLibPath;
+            }
+            else
+#endif
+            {
+                libPath = PlayerSettings.iOS.sdkVersion is iOSSdkVersion.DeviceSDK
+                    ? DeviceLibPath : SimLibPath;
+            }
+            
             string mainTargetGuid = project.GetUnityFrameworkTargetGuid();
             project.AddBuildProperty(mainTargetGuid, "LIBRARY_SEARCH_PATHS", libPath);
             
