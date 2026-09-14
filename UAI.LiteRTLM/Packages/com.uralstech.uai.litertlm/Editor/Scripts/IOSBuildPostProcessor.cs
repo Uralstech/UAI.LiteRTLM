@@ -18,6 +18,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.iOS.Xcode;
+using UnityEngine;
 
 #nullable enable
 namespace Uralstech.UAI.LiteRTLM.Editor
@@ -30,17 +31,23 @@ namespace Uralstech.UAI.LiteRTLM.Editor
         private const string SwiftDeviceLibPath = "$(PROJECT_DIR)/UnityFramework/Libraries/ARM64/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/arm64";
         private const string SwiftSimLibPath = "$(PROJECT_DIR)/UnityFramework/Libraries/ARM64Simulator/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/sim_arm64";
 
-        public int callbackOrder => 0;
+        public int callbackOrder => 999;
         
         public void OnPostprocessBuild(BuildReport report)
         {
             if (report.summary.platform != BuildTarget.iOS
                 || report.summary.buildType != BuildType.Player
-                || report.summary.result is BuildResult.Failed or BuildResult.Cancelled
-#pragma warning disable CS0618 // Type or member is obsolete
-                || PlayerSettings.iOS.simulatorSdkArchitecture == AppleMobileArchitectureSimulator.X86_64)
-#pragma warning restore CS0618 // Type or member is obsolete
+                || report.summary.result is BuildResult.Failed or BuildResult.Cancelled)
                 return;
+
+            if (PlayerSettings.iOS.sdkVersion is iOSSdkVersion.SimulatorSDK
+#pragma warning disable CS0618 // Type or member is obsolete
+                && PlayerSettings.iOS.simulatorSdkArchitecture == AppleMobileArchitectureSimulator.X86_64)
+#pragma warning restore CS0618 // Type or member is obsolete
+            {
+                Debug.LogWarning("LiteRT-LM does not support the x64 iOS Simulator.");
+                return;
+            }
             
             string projectPath = PBXProject.GetPBXProjectPath(report.summary.outputPath);
             
