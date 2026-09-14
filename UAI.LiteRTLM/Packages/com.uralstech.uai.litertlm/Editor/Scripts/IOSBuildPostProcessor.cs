@@ -25,11 +25,11 @@ namespace Uralstech.UAI.LiteRTLM.Editor
 {
     internal sealed class IOSBuildPostProcessor : IPostprocessBuildWithReport
     {
-        private const string DeviceLibPath = "$(PROJECT_DIR)/Libraries/ARM64/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/arm64";
-        private const string SimLibPath = "$(PROJECT_DIR)/Libraries/ARM64Simulator/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/sim_arm64";
+        private const string DeviceLibPath = "$(SRCROOT)/Libraries/ARM64/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/arm64";
+        private const string SimLibPath = "$(SRCROOT)/Libraries/ARM64Simulator/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/sim_arm64";
         
-        private const string SwiftDeviceLibPath = "$(PROJECT_DIR)/UnityFramework/Libraries/ARM64/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/arm64";
-        private const string SwiftSimLibPath = "$(PROJECT_DIR)/UnityFramework/Libraries/ARM64Simulator/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/sim_arm64";
+        private const string SwiftDeviceLibPath = "$(SRCROOT)/UnityFramework/Libraries/ARM64/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/arm64";
+        private const string SwiftSimLibPath = "$(SRCROOT)/UnityFramework/Libraries/ARM64Simulator/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/sim_arm64";
 
         public int callbackOrder => 999;
         
