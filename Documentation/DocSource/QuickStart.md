@@ -65,7 +65,7 @@ data to streamed operations because the wrappers use their own data to track man
 
 | UAI.LiteRTLM     | LiteRT-LM                      | Included Platforms                                                                | Included Accelerators                                                 |
 | ---------------- | ------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 2.6.0-preview.1+ | v0.17.1 (`dadb79c`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
+| 2.6.0-preview.1+ | `dadb79c` (v0.17.1)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.5.0-preview.1+ | v0.17.0 (`e9fd8c5`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.4.0-preview.1+ | v0.16.1 / v0.16.0 (`924e79c`)  | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.3.0-preview.1+ | v0.16.0 (`740f122`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
