@@ -31,8 +31,9 @@ This package tries to follow [semantic versioning](https://semver.org/), with a 
 While UAI.LiteRTLM aims to support all platforms supported by LiteRT-LM, it currently only includes prebuilt native binaries for a
 subset of them, depending on the package version. The package aims to provide LiteRT-LM binaries without C patches and builds the default
 `c:litert-lm` Bazel target with platform-specific command-line arguments. The build scripts for all platforms are available in
-[`Native/`](https://github.com/Uralstech/UAI.LiteRTLM/blob/master/Native). You can build your own binaries for
-additional platforms and include them in your project's `Plugins` directory. UAI.LiteRTLM should use them as-is for that platform.
+[`Native/`](https://github.com/Uralstech/UAI.LiteRTLM/blob/master/Native). Please note that the scripts may modify or remove files
+in the LiteRT-LM submodule's working tree. You can build your own binaries for additional platforms and include them in your
+project's `Plugins` directory. UAI.LiteRTLM should use them as-is for that platform.
 
 UAI.LiteRTLM also does not include every LiteRT-LM GPU accelerator. Only one accelerator is included per platform.
 
@@ -64,6 +65,7 @@ data to streamed operations because the wrappers use their own data to track man
 
 | UAI.LiteRTLM     | LiteRT-LM                      | Included Platforms                                                                | Included Accelerators                                                 |
 | ---------------- | ------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| 2.6.0-preview.1+ | v0.17.1 (`dadb79c`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.5.0-preview.1+ | v0.17.0 (`e9fd8c5`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.4.0-preview.1+ | v0.16.1 / v0.16.0 (`924e79c`)  | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 | 2.3.0-preview.1+ | v0.16.0 (`740f122`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
@@ -71,6 +73,11 @@ data to streamed operations because the wrappers use their own data to track man
 | 2.1.0-preview.5+ | v0.15.0-alpha0 (`ad53ed1`)     | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 
 #### LiteRT-LM Notes
+
+# [v0.17.1](#tab/litert-lm-notes-v0171)
+
+Uses a fork of LiteRT-LM at v0.17.1 (`5e58e9a`) with commit `a1b8ec1` cherry-picked onto it to fix [#3247](https://github.com/google-ai-edge/LiteRT-LM/issues/3247).
+The cherry-pick was pushed to the `latest-stable` branch of my fork of LiteRT-LM, with commit ID [`dadb79c`](https://github.com/Uralstech/LiteRT-LM/tree/dadb79c64229af33dab023e94e7030e872b7a915).
 
 # [v0.17.0](#tab/litert-lm-notes-v0170)
 
