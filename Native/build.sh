@@ -1,12 +1,20 @@
 # BUILD_SCRIPTS_DIR=$(pwd)
 cd LiteRT-LM || exit 1
 
-# For LiteRT-LM v0.17.1 (https://github.com/google-ai-edge/LiteRT-LM/issues/3247)
-cherry_pick_0_17_1() {
-    git cherry-pick a1b8ec1
+# Fix for LiteRT-LM v0.17.1 issue #3247
+pin_litert_lm_0_17_1() {
+    local repo="https://github.com/Uralstech/LiteRT-LM.git"
+    local commit="dadb79c64229af33dab023e94e7030e872b7a915"
+
+    # The above fork at the commit ID is equivalent to running:
+    # > git reset --hard v0.17.1
+    # > git cherry-pick a1b8ec1
+
+    git fetch "${repo}" "${commit}" || return 1
+    git reset --hard "${commit}" || return 1
 }
 
-cherry_pick_0_17_1
+pin_litert_lm_0_17_1 || exit 1
 HEAD_COMMIT=$(git rev-parse HEAD)
 
 PLUGIN_DIR="../../UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins"
