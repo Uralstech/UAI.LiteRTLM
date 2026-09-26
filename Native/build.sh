@@ -1,6 +1,12 @@
 # BUILD_SCRIPTS_DIR=$(pwd)
 cd LiteRT-LM || exit 1
 
+# For LiteRT-LM v0.17.1 (https://github.com/google-ai-edge/LiteRT-LM/issues/3247)
+cherry_pick_0_17_1() {
+    git cherry-pick a1b8ec1
+}
+
+cherry_pick_0_17_1
 HEAD_COMMIT=$(git rev-parse HEAD)
 
 PLUGIN_DIR="../../UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins"
