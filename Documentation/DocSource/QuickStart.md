@@ -6,20 +6,20 @@ It may not represent best practices for production use.
 ## Aim
 
 UAI.LiteRTLM aims to provide a 1:1 interface to the LiteRT-LM cross-platform C API.
-Since LiteRT-LM's C API is highly unstable and not intended for public use, this section
-explains the breaking changes policy and LiteRT-LM version support for UAI.LiteRTLM.
+Since LiteRT-LM's C API is still under development, this section explains the breaking
+changes policy and LiteRT-LM version support for UAI.LiteRTLM.
 
 ### Versioning Scheme
 
 This package tries to follow [semantic versioning](https://semver.org/), with a few caveats:
 
-- **All** versions leading up to the stable release of the LiteRT-LM C API **will** be *preview* versions and are not recommended for production use.
+- **All** versions leading up to the stable release of the LiteRT-LM C API **will** be *preview* versions.
     - Example: `2.1.0-preview.3`, `2.0.0-preview.1`
 
 - `MINOR` version updates (`x.Y.z`, where `Y` is the `MINOR` version number) indicate a change in the LiteRT-LM tag and/or commit ID used by the package.
-    - Example: UAI.LiteRTLM `2.1.0-preview.x` -> LiteRT-LM `v0.15.0-alpha0` (`ad53ed1`), `2.0.0-preview.x` -> LiteRT-LM `v0.14.0` (`80f301f`)
+    - Example: UAI.LiteRTLM `2.6.0-preview.x` -> LiteRT-LM `v0.17.1`, `2.5.0-preview.x` -> LiteRT-LM `v0.17.0`
 
-- `MINOR` version updates are ***very likely*** to contain breaking changes due to changes in the LiteRT-LM C API.
+- `MINOR` version updates may contain breaking changes due to changes in the LiteRT-LM C API.
 
 - `PATCH` version updates are represented by the `preview` label (`x.y.0-preview.Z`, where `Z` is the `PATCH` version number) instead of the standard `x.y.Z` format.
 
