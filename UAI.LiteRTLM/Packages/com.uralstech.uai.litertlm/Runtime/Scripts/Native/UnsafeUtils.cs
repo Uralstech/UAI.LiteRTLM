@@ -36,5 +36,17 @@ namespace Uralstech.UAI.LiteRTLM.Native
             Encoding.UTF8.GetBytes(str, span[..count]);
             return mem;
         }
+        
+        /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
+        public static PackageUnsafeUtils.TempMem AllocateNullTerminatedStringUTF8(ReadOnlySpan<char> str)
+        {
+            int count = Encoding.UTF8.GetByteCount(str);
+            
+            PackageUnsafeUtils.TempMem mem = PackageUnsafeUtils.Allocate(count + 1, out Span<byte> span);
+            Encoding.UTF8.GetBytes(str, span[..count]);
+            span[count] = 0;
+            
+            return mem;
+        }
     }
 }

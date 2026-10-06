@@ -1084,9 +1084,28 @@ namespace Uralstech.UAI.LiteRTLM
         public Responses? RunTextScoring(string[] targetText, bool storeTokenLengths)
         {
             ThrowIfDisposed();
+
+            int count = targetText.Length;
+            PackageUnsafeUtils.TempMem[] allocatedMemory = new PackageUnsafeUtils.TempMem[count];
+            IntPtr[] ptrs = new IntPtr[count];
             
-            IntPtr ptr = NativeAPI.Session.litert_lm_session_run_text_scoring(Native, targetText, (UIntPtr)targetText.Length, storeTokenLengths);
-            return ptr != IntPtr.Zero ? new Responses(ptr) : null;
+            try
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    PackageUnsafeUtils.TempMem allocated = UnsafeUtils.AllocateNullTerminatedStringUTF8(targetText[i]);
+                    allocatedMemory[i] = allocated;
+                    ptrs[i] = allocated.Ptr;
+                }
+                
+                IntPtr ptr = NativeAPI.Session.litert_lm_session_run_text_scoring(Native, ptrs, (UIntPtr)count, storeTokenLengths);
+                return ptr != IntPtr.Zero ? new Responses(ptr) : null;
+            }
+            finally
+            {
+                foreach (PackageUnsafeUtils.TempMem? memory in allocatedMemory)
+                    memory?.Dispose();
+            }
         }
 
         /// <summary>Generates content from the input prompt.</summary>
@@ -2121,7 +2140,7 @@ namespace Uralstech.UAI.LiteRTLM
         /// <exception cref="InvalidOperationException">Thrown if the file cannot be opened.</exception>
         public Capabilities(string modelPath)
         {
-            Native = NativeAPI.Capabilities.litert_lm_loaded_file_create(modelPath);
+            Native = NativeAPI.ModelInfo.litert_lm_loaded_file_create(modelPath);
             if (Native == IntPtr.Zero)
                 throw new InvalidOperationException("Failed to load model file.");
         }
@@ -2130,7 +2149,7 @@ namespace Uralstech.UAI.LiteRTLM
         public bool HasSpeculativeDecodingSupport()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_has_speculative_decoding_support(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_has_speculative_decoding_support(Native);
         }
 
         /// <summary>
@@ -2140,7 +2159,7 @@ namespace Uralstech.UAI.LiteRTLM
         public bool SupportsThinking()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_supports_thinking(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_supports_thinking(Native);
         }
 
         /// <summary>
@@ -2150,42 +2169,42 @@ namespace Uralstech.UAI.LiteRTLM
         public bool SupportsFunctionCalling()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_supports_function_calling(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_supports_function_calling(Native);
         }
 
         /// <summary>Returns the default sampler type for the model.</summary>
         public SamplerType GetSamplerType()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_type(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_sampler_type(Native);
         }
 
         /// <summary>Returns the default sampler temperature for the model.</summary>
         public float GetSamplerTemperature()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_temperature(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_sampler_temperature(Native);
         }
 
         /// <summary>Returns the default sampler topK for the model.</summary>
         public int GetSamplerTopK()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_top_k(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_sampler_top_k(Native);
         }
 
         /// <summary>Returns the default sampler topP for the model.</summary>
         public float GetSamplerTopP()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_sampler_top_p(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_sampler_top_p(Native);
         }
 
         /// <summary>Returns <see langword="true"/> if the input modality is supported.</summary>
         public bool SupportsInputModality(Modality modality)
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_supports_input_modality(Native, modality);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_supports_input_modality(Native, modality);
         }
 
         /// <summary>Returns the maximum vision token budget for the model.</summary>
@@ -2193,13 +2212,13 @@ namespace Uralstech.UAI.LiteRTLM
         public int GetMaxVisionTokenBudget()
         {
             ThrowIfDisposed();
-            return NativeAPI.Capabilities.litert_lm_loaded_file_max_vision_token_budget(Native);
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_max_vision_token_budget(Native);
         }
         
         protected override void ReleaseUnmanagedResources()
         {
             if (Native != IntPtr.Zero)
-                NativeAPI.Capabilities.litert_lm_loaded_file_delete(Native);
+                NativeAPI.ModelInfo.litert_lm_loaded_file_delete(Native);
         }
     }
 

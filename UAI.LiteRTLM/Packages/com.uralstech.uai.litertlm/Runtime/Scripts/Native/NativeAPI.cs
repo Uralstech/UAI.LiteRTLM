@@ -98,7 +98,24 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_session_config_set_apply_prompt_template(IntPtr config,
                 [MarshalAs(UnmanagedType.I1)] bool applyPromptTemplate);
-
+            
+            /// <summary>Sets whether to enable speculative decoding for this session.</summary>
+            /// <param name="config">The config to modify.</param>
+            /// <param name="enableSpeculativeDecoding">
+            /// Whether to enable speculative decoding.
+            /// If set to <see langword="true"/>, speculative decoding is enabled for this session. If the
+            /// engine was not initialized with speculative decoding enabled, setting this
+            /// flag to <see langword="true"/> causes the executor to perform lazy loading of the
+            /// MTP drafter on the first session request. If set to <see langword="false"/>, speculative
+            /// decoding is explicitly disabled for this session even if the engine was
+            /// initialized with speculative decoding enabled. If this function is not called
+            /// on the config, the session inherits the engine's speculative decoding setting
+            /// by default.
+            /// </param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_session_config_set_enable_speculative_decoding(IntPtr config,
+                [MarshalAs(UnmanagedType.I1)] bool enableSpeculativeDecoding);
+            
             /// <summary>Sets the sampler parameters for this session config.</summary>
             /// <param name="config">The config to modify.</param>
             /// <param name="samplerParams">The sampler parameters to use.</param>
@@ -382,6 +399,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_engine_settings_set_parallel_file_section_loading(IntPtr settings,
                 [MarshalAs(UnmanagedType.I1)] bool parallelFileSectionLoading);
+
+            /// <summary>Sets whether to enable single threaded execution.</summary>
+            /// <param name="settings">The engine settings.</param>
+            /// <param name="singleThreadedExecution">Whether to enable single threaded execution.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_engine_settings_set_single_threaded_execution(IntPtr settings,
+                [MarshalAs(UnmanagedType.I1)] bool singleThreadedExecution);
 
             /// <summary>
             /// Sets the maximum number of images for the engine.
@@ -696,8 +720,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
             /// </returns>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern IntPtr litert_lm_session_run_text_scoring(IntPtr session,
-                [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPUTF8Str)] string[] targetText,
-                UIntPtr numTargets, [MarshalAs(UnmanagedType.I1)] bool storeTokenLengths);
+                IntPtr[] targetText, UIntPtr numTargets, [MarshalAs(UnmanagedType.I1)] bool storeTokenLengths);
 
             /// <summary>Generates content from the input prompt.</summary>
             /// <param name="session">The session to use for generation.</param>
@@ -1380,7 +1403,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
             public static extern IntPtr litert_lm_json_response_get_string(IntPtr response);
         }
         
-        public static class Capabilities
+        public static class ModelInfo
         {
             /// <summary>Loads a LiteRT-LM file from the given path for capability queries.</summary>
             /// <returns>Returns <see cref="IntPtr.Zero"/> if the file cannot be opened.</returns>
@@ -1439,6 +1462,118 @@ namespace Uralstech.UAI.LiteRTLM.Native
             /// <remarks>Returns -1 if the model does not support vision or if the budget is not defined.</remarks>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern int litert_lm_loaded_file_max_vision_token_budget(IntPtr loadedFile);
+            
+            /// <summary>Returns the maximum supported context tokens for the loaded LiteRT-LM file.</summary>
+            /// <remarks>
+            /// <list type="bullet">
+            /// <item><description>
+            /// If the model is static (litert_lm_loaded_file_is_dynamic_context is
+            /// <see langword="false"/>), this is the fixed context size determined by
+            /// the model graph.
+            /// </description></item>
+            /// <item><description>
+            /// If the model is dynamic (litert_lm_loaded_file_is_dynamic_context is
+            /// <see langword="true"/>), this is the largest context size that can be set.
+            /// </description></item>
+            /// </list>
+            /// </remarks>
+            /// <returns>Returns 0 if not found or on error.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern uint litert_lm_loaded_file_max_context_tokens(IntPtr loadedFile);
+
+            /// <summary>Returns whether the model has dynamic context.</summary>
+            /// <remarks>
+            /// Dynamic context means the context size can be configured by the caller
+            /// up to the maximum limit.
+            /// </remarks>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <returns><see langword="true"/> if the model has dynamic context, <see langword="false"/> otherwise.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool litert_lm_loaded_file_is_dynamic_context(IntPtr loadedFile);
+
+            /// <summary>Returns the number of supported vision token lengths.</summary>
+            /// <remarks>Writes up to <paramref name="maxSize"/> lengths to the provided array.</remarks>
+            /// <returns>
+            /// If <paramref name="lengths"/> is <see langword="null"/>, only returns the count.
+            /// Returns -1 if the model does not support vision.
+            /// </returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_loaded_file_vision_signature_selection(IntPtr loadedFile,
+                int[]? lengths, int maxSize);
+
+            /// <summary>
+            /// Returns the number of supported backends for a given modality, ordered by
+            /// priority (first entry is the default/highest-priority backend).
+            /// </summary>
+            /// <remarks>Writes up to <paramref name="maxSize"/> backends to the provided <paramref name="backends"/> array.</remarks>
+            /// <returns>
+            /// If <paramref name="backends"/> is <see langword="null"/>, only returns the count of supported backends.
+            /// Returns 0 if the modality is not supported.
+            /// </returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_loaded_file_modality_supported_backends(IntPtr loadedFile,
+                Modality modality, BackendType[]? backends, int maxSize);
+
+            /// <summary>
+            /// Returns the detected NPU brand of the model for a given modality, or
+            /// <see cref="NpuBrand.Unknown"/> if not NPU-compiled for this modality.
+            /// </summary>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <param name="modality">The modality to query.</param>
+            /// <returns>The detected NPU brand.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern NpuBrand litert_lm_loaded_file_modality_npu_brand(IntPtr loadedFile,
+                Modality modality);
+
+            /// <summary>
+            /// Returns the target SoC name for a given modality (e.g. "SM8750", "Tensor_G5"), or
+            /// <see cref="IntPtr.Zero"/> if not specified or not NPU-compiled.
+            /// </summary>
+            /// <remarks>The returned pointer is valid as long as the loaded file is valid.</remarks>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <param name="modality">The modality to query.</param>
+            /// <returns>A pointer to the UTF-8 SoC name string, or <see cref="IntPtr.Zero"/> if not specified or not NPU-compiled.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_loaded_file_modality_soc_name(IntPtr loadedFile,
+                Modality modality);
+
+            /// <summary>Returns the minimum LiteRT-LM runtime version required to run this model.</summary>
+            /// <remarks>
+            /// The returned pointer is valid as long as the loaded file is valid.
+            /// Returns <see cref="IntPtr.Zero"/> if the version requirement is not defined.
+            /// </remarks>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <returns>A pointer to the UTF-8 version string, or <see cref="IntPtr.Zero"/> if not defined.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_loaded_file_min_runtime_version(IntPtr loadedFile);
+
+            /// <summary>Returns the model type of the loaded LiteRT-LM file.</summary>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <returns>The model type.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern ModelType litert_lm_loaded_file_model_type(IntPtr loadedFile);
+
+            /// <summary>Returns the output embedding dimension for the model.</summary>
+            /// <remarks>Returns -1 if the model is not an embedding model or if the dimension is not defined.</remarks>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <returns>The output embedding dimension, or -1 if not defined.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_loaded_file_embedding_dimension(IntPtr loadedFile);
+
+            /// <summary>Returns the number of supported embedding signature sequence lengths.</summary>
+            /// <remarks>
+            /// Writes up to <paramref name="maxSize"/> lengths to the provided <paramref name="lengths"/> array.
+            /// If <paramref name="lengths"/> is <see langword="null"/>, only returns the count.
+            /// Returns -1 if the model is not an embedding model or if signature lengths are not defined.
+            /// </remarks>
+            /// <param name="loadedFile">The loaded file handle.</param>
+            /// <param name="lengths">The array to receive sequence lengths, or <see langword="null"/> to query the count.</param>
+            /// <param name="maxSize">The maximum number of sequence lengths to write.</param>
+            /// <returns>The number of sequence lengths written, or -1 if the model is not an embedding model.</returns>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_loaded_file_embedding_signature_selection(IntPtr loadedFile,
+                int[]? lengths, int maxSize);
         }
 
         public static class EmbeddingEngineSettings
@@ -1464,6 +1599,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_embedding_engine_settings_delete(IntPtr settings);
         
+            /// <summary>Sets the number of threads for the CPU backend in Embedding Engine Settings.</summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="numThreads">The number of threads.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_num_threads(IntPtr settings,
+                int numThreads);
+
             /// <summary>Sets the number of threads for the audio CPU backend in Embedding Engine Settings.</summary>
             /// <param name="settings">The embedding engine settings.</param>
             /// <param name="numThreads">The number of threads.</param>
@@ -1506,12 +1648,26 @@ namespace Uralstech.UAI.LiteRTLM.Native
             public static extern void litert_lm_embedding_engine_settings_set_max_input_length(IntPtr settings,
                 int maxInputLength);
         
+            /// <summary>Sets the minimum sequence length (in tokens) for text encoder signatures in Embedding Engine Settings.</summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="minInputLength">The minimum input length. Passing a negative value unsets the option.</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_min_input_length(IntPtr settings,
+                int minInputLength);
+
             /// <summary>Sets the desired number of vision tokens generated per image in Embedding Engine Settings.</summary>
             /// <param name="settings">The embedding engine settings.</param>
             /// <param name="visionTokensPerImage">The vision tokens per image. Passing a non-positive value unsets the option.</param>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern void litert_lm_embedding_engine_settings_set_vision_tokens_per_image(IntPtr settings,
                 int visionTokensPerImage);
+            
+            /// <summary>Sets the activation data type for the embedding engine settings.</summary>
+            /// <param name="settings">The embedding engine settings.</param>
+            /// <param name="activationDataType">The activation data type (FLOAT32, FLOAT16, etc.).</param>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_embedding_engine_settings_set_activation_data_type(IntPtr settings,
+                ActivationDataType activationDataType);
         }
         
         public static class EmbeddingOptions
@@ -1690,6 +1846,39 @@ namespace Uralstech.UAI.LiteRTLM.Native
         }
 
         /// <summary>
+        /// See <a href="https://github.com/google-ai-edge/LiteRT-LM/blob/b2f686e2ed4718fb84ec398a61dd59ca0f0aff27/c/error_reporter.h#L31">the official documentation.</a>
+        /// </summary>
+        public static class ErrorReporter
+        {
+            /// <summary>Returns the last error message recorded on the calling thread.</summary>
+            /// <returns>
+            /// A null-terminated UTF-8 string containing the error description, or <see cref="IntPtr.Zero"/> if
+            /// no error has occurred on the calling thread or if the error state has been cleared.
+            /// </returns>
+            /// <seealso href="https://github.com/google-ai-edge/LiteRT-LM/blob/b2f686e2ed4718fb84ec398a61dd59ca0f0aff27/c/error_reporter.h#L130">LiteRt-LM reference.</seealso>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern IntPtr litert_lm_get_last_error_message();
+
+            /// <summary>Returns the last error code recorded on the calling thread.</summary>
+            /// <remarks>
+            /// The return type is <see cref="int"/> rather than <see cref="StatusCode"/> so that the ABI
+            /// does not depend on the compiler's choice of underlying type for the enum,
+            /// which keeps this function easy to bind from other languages.
+            /// </remarks>
+            /// <seealso href="https://github.com/google-ai-edge/LiteRT-LM/blob/b2f686e2ed4718fb84ec398a61dd59ca0f0aff27/c/error_reporter.h#L160">LiteRt-LM reference.</seealso>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern int litert_lm_get_last_error_code();
+
+            /// <summary>
+            /// Clears the last error recorded on the calling thread, resetting the error
+            /// message to <see cref="IntPtr.Zero"/> and the error code to <see cref="StatusCode.Ok"/> (0).
+            /// </summary>
+            /// <seealso href="https://github.com/google-ai-edge/LiteRT-LM/blob/b2f686e2ed4718fb84ec398a61dd59ca0f0aff27/c/error_reporter.h#L187">LiteRt-LM reference.</seealso>
+            [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
+            public static extern void litert_lm_clear_last_error();
+        }
+        
+        /// <summary>
         /// WARNING: The APIs declared in this class are EXPERIMENTAL and subject to
         /// change or removal without notice. API stability and backward compatibility
         /// are not guaranteed.
@@ -1725,6 +1914,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
             /// Checks whether the LiteRT-LM runtime binary was built with the debugger
             /// tracing backend enabled (LITERT_LM_DEBUGGER_ENABLED=1).
             /// </summary>
+            /// <remarks>
+            /// NOTE: this is a boolean predicate, NOT a <see cref="StatusCode"/>. Unlike the
+            /// status-returning functions in this API, 0 here means "debugger disabled",
+            /// not "success".
+            /// </remarks>
             /// <returns>1 if debugger is enabled at compile-time, 0 otherwise.</returns>
             [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
             public static extern int litert_lm_experimental_is_debugger_enabled();

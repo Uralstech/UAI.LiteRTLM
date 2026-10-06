@@ -102,6 +102,33 @@ namespace Uralstech.UAI.LiteRTLM
         Audio   = 2,
         Video   = 3,
     }
+    
+    /// <summary>Hardware backend type.</summary>
+    public enum BackendType : int
+    {
+        CPU = 1,
+        GPU = 2,
+        NPU = 3,
+    }
+
+    /// <summary>NPU brand options.</summary>
+    public enum NpuBrand : int
+    {
+        Unknown         = 0,
+        Qualcomm        = 1,
+        GoogleTensor    = 2,
+        MediaTek        = 3,
+        Intel           = 4,
+        Samsung         = 5,
+    }
+
+    /// <summary>Model type of the loaded LiteRT-LM file.</summary>
+    public enum ModelType : int
+    {
+        Unknown     = 0,
+        Llm         = 1,
+        Embedding   = 2,
+    }
 
     /// <summary>Strategy for handling inputs longer than the maximum supported signature length.</summary>
     public enum InputOverflowStrategy : int
@@ -114,6 +141,30 @@ namespace Uralstech.UAI.LiteRTLM
         Error           = 2,
     }
 
+    /// <summary>
+    /// See <a href="https://github.com/google-ai-edge/LiteRT-LM/blob/b2f686e2ed4718fb84ec398a61dd59ca0f0aff27/c/error_reporter.h#L82">the official documentation.</a>
+    /// </summary>
+    public enum StatusCode : int
+    {
+        Ok                  = 0,
+        Cancelled           = 1,
+        Unknown             = 2,
+        InvalidArgument     = 3,
+        DeadlineExceeded    = 4,
+        NotFound            = 5,
+        AlreadyExists       = 6,
+        PermissionDenied    = 7,
+        ResourceExhausted   = 8,
+        FailedPrecondition  = 9,
+        Aborted             = 10,
+        OutOfRange          = 11,
+        Unimplemented       = 12,
+        Internal            = 13,
+        Unavailable         = 14,
+        DataLoss            = 15,
+        Unauthenticated     = 16,
+    }
+    
     public static class BackendNames
     {
         public const string CPU = "cpu";
