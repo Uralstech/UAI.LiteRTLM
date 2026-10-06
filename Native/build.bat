@@ -4,8 +4,8 @@ set "DRIVE=%~d0"
 :: set "BUILD_SCRIPTS_DIR=%CD%"
 cd LiteRT-LM || exit /b 1
 
-call :pin_litert_lm_0_17_1
-if errorlevel 1 exit /b 1
+:: call :pin_litert_lm_0_17_1
+:: if errorlevel 1 exit /b 1
 
 for /f %%H in ('git rev-parse HEAD') do set HEAD_COMMIT=%%H
 
@@ -23,19 +23,19 @@ set "PREBUILT_LIBS_PC=libLiteRtTopKWebGpuSampler libLiteRtWebGpuAccelerator libw
 goto :main
 
 :: Fix for LiteRT-LM v0.17.1 issue #3247
-:pin_litert_lm_0_17_1
-set "LITERT_LM_REPO=https://github.com/Uralstech/LiteRT-LM.git"
-set "LITERT_LM_COMMIT=dadb79c64229af33dab023e94e7030e872b7a915"
-
-:: The above fork at the commit ID is equivalent to running:
-:: > git reset --hard v0.17.1
-:: > git cherry-pick a1b8ec1
-
-git fetch "%LITERT_LM_REPO%" "%LITERT_LM_COMMIT%"
-if errorlevel 1 exit /b 1
-
-git reset --hard "%LITERT_LM_COMMIT%"
-exit /b %ERRORLEVEL%
+:: :pin_litert_lm_0_17_1
+:: set "LITERT_LM_REPO=https://github.com/Uralstech/LiteRT-LM.git"
+:: set "LITERT_LM_COMMIT=dadb79c64229af33dab023e94e7030e872b7a915"
+:: 
+:: :: The above fork at the commit ID is equivalent to running:
+:: :: > git reset --hard v0.17.1
+:: :: > git cherry-pick a1b8ec1
+:: 
+:: git fetch "%LITERT_LM_REPO%" "%LITERT_LM_COMMIT%"
+:: if errorlevel 1 exit /b 1
+:: 
+:: git reset --hard "%LITERT_LM_COMMIT%"
+:: exit /b %ERRORLEVEL%
 
 :build
 set "CONFIG=%~1"

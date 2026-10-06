@@ -2,19 +2,19 @@
 cd LiteRT-LM || exit 1
 
 # Fix for LiteRT-LM v0.17.1 issue #3247
-pin_litert_lm_0_17_1() {
-    local repo="https://github.com/Uralstech/LiteRT-LM.git"
-    local commit="dadb79c64229af33dab023e94e7030e872b7a915"
+# pin_litert_lm_0_17_1() {
+#     local repo="https://github.com/Uralstech/LiteRT-LM.git"
+#     local commit="dadb79c64229af33dab023e94e7030e872b7a915"
+# 
+#     # The above fork at the commit ID is equivalent to running:
+#     # > git reset --hard v0.17.1
+#     # > git cherry-pick a1b8ec1
+# 
+#     git fetch "${repo}" "${commit}" || return 1
+#     git reset --hard "${commit}" || return 1
+# }
 
-    # The above fork at the commit ID is equivalent to running:
-    # > git reset --hard v0.17.1
-    # > git cherry-pick a1b8ec1
-
-    git fetch "${repo}" "${commit}" || return 1
-    git reset --hard "${commit}" || return 1
-}
-
-pin_litert_lm_0_17_1 || exit 1
+# pin_litert_lm_0_17_1 || exit 1
 HEAD_COMMIT=$(git rev-parse HEAD)
 
 PLUGIN_DIR="../../UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins"
@@ -105,7 +105,7 @@ build android_arm64 --linkopt=-Wl,-z,max-page-size=16384 || exit 1
 copy_libs android arm64 so Android "${PREBUILT_LIBS_ANDROID}"
 
 patch_prebuilt_lib_android arm64 libLiteRtTopKOpenClSampler "${BUILT_SYMBOL}" || exit 1
-patch_prebuilt_lib_android arm64 libLiteRtOpenClAccelerator "libandroid" || exit 1 # LiteRT-LM v0.17.0-specific
+# patch_prebuilt_lib_android arm64 libLiteRtOpenClAccelerator "libandroid" || exit 1 # LiteRT-LM v0.17.0-specific
 
 # ------------------------------  macOS  ------------------------------
 
