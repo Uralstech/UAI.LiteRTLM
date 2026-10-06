@@ -109,6 +109,27 @@ namespace Uralstech.UAI.LiteRTLM
         public static void SetMinLogLevel(LogSeverity level) =>
             NativeAPI.litert_lm_set_min_log_level(level);
     }
+
+    /// <summary>Thread-local error reporting utilities for LiteRT LM operations.</summary>
+    public static class LiteRTLMErrorReporter
+    {
+        /// <summary>Returns the last error message recorded on the calling thread.</summary>
+        /// <returns>The error description, or <see langword="null"/> if no error has occurred on the calling thread or if the error state has been cleared.</returns>
+        public static string? GetLastErrorMessage()
+        {
+            IntPtr ptr = NativeAPI.ErrorReporter.litert_lm_get_last_error_message();
+            return ptr != IntPtr.Zero ? UnsafeUtils.MarshalStringUTF8(ptr) : null;
+        }
+
+        /// <summary>Returns the last error code recorded on the calling thread.</summary>
+        /// <returns>0 (<see cref="StatusCode.Ok"/>) if no error occurred.</returns>
+        public static int GetLastErrorCode() =>
+            NativeAPI.ErrorReporter.litert_lm_get_last_error_code();
+
+        /// <summary>Clears the last error recorded on the calling thread.</summary>
+        public static void ClearLastError() =>
+            NativeAPI.ErrorReporter.litert_lm_clear_last_error();
+    }
     
     /// <summary>Callback for streaming responses.</summary>
     /// <param name="chunk">The stream chunk object. It's only valid for the duration of the call.</param>
@@ -212,6 +233,12 @@ namespace Uralstech.UAI.LiteRTLM
         {
             ThrowIfNullPtr(ptr);
             return new JsonResponse(ptr);
+        }
+
+        public static SessionDebugInfo SessionDebugInfoFromPtr(IntPtr ptr)
+        {
+            ThrowIfNullPtr(ptr);
+            return new SessionDebugInfo(ptr);
         }
 
         /// <remarks>For pointers returned by <see cref="NativeAPI.EmbeddingResponses.litert_lm_embedding_responses_get_at"/>.</remarks>
@@ -325,6 +352,22 @@ namespace Uralstech.UAI.LiteRTLM
         {
             ThrowIfDisposed();
             NativeAPI.SessionConfig.litert_lm_session_config_set_apply_prompt_template(Native, applyPromptTemplate);
+        }
+
+        /// <summary>Sets whether to enable speculative decoding for this session.</summary>
+        /// <remarks>
+        /// If set to <see langword="true"/>, speculative decoding is enabled for this session. If the
+        /// engine was not initialized with speculative decoding enabled, setting this
+        /// flag to <see langword="true"/> causes the executor to perform lazy loading of the
+        /// MTP drafter on the first session request. If set to <see langword="false"/>, speculative
+        /// decoding is explicitly disabled for this session even if the engine was
+        /// initialized with speculative decoding enabled. If not called, the session inherits the engine's default.
+        /// </remarks>
+        /// <param name="enableSpeculativeDecoding">Whether to enable speculative decoding.</param>
+        public void SetEnableSpeculativeDecoding(bool enableSpeculativeDecoding)
+        {
+            ThrowIfDisposed();
+            NativeAPI.SessionConfig.litert_lm_session_config_set_enable_speculative_decoding(Native, enableSpeculativeDecoding);
         }
         
         /// <summary>Sets the sampler parameters for this session configuration.</summary>
@@ -535,6 +578,7 @@ namespace Uralstech.UAI.LiteRTLM
             if (Native == IntPtr.Zero)
                 throw new InvalidOperationException("Failed to create native suppress tokens config.");
         }
+
         /// <summary>Sets the list of token IDs to suppress for the suppress tokens config.</summary>
         /// <param name="suppressTokens">
         /// An array of integer token IDs that should be banned
@@ -711,6 +755,14 @@ namespace Uralstech.UAI.LiteRTLM
         {
             ThrowIfDisposed();
             NativeAPI.EngineSettings.litert_lm_engine_settings_set_parallel_file_section_loading(Native, parallelFileSectionLoading);
+        }
+
+        /// <summary>Sets whether to enable single threaded execution.</summary>
+        /// <param name="singleThreadedExecution">Whether to enable single threaded execution.</param>
+        public void SetSingleThreadedExecution(bool singleThreadedExecution)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EngineSettings.litert_lm_engine_settings_set_single_threaded_execution(Native, singleThreadedExecution);
         }
         
         /// <summary>
@@ -2134,11 +2186,11 @@ namespace Uralstech.UAI.LiteRTLM
         }
     }
 
-    public sealed class Capabilities : LiteRTLMNativeHandle
+    public sealed class ModelInfo : LiteRTLMNativeHandle
     {
         /// <summary>Loads a LiteRT-LM file from the given path for capability queries.</summary>
         /// <exception cref="InvalidOperationException">Thrown if the file cannot be opened.</exception>
-        public Capabilities(string modelPath)
+        public ModelInfo(string modelPath)
         {
             Native = NativeAPI.ModelInfo.litert_lm_loaded_file_create(modelPath);
             if (Native == IntPtr.Zero)
@@ -2214,6 +2266,110 @@ namespace Uralstech.UAI.LiteRTLM
             ThrowIfDisposed();
             return NativeAPI.ModelInfo.litert_lm_loaded_file_max_vision_token_budget(Native);
         }
+
+        /// <summary>Returns the maximum supported context tokens for the loaded LiteRT-LM file.</summary>
+        /// <remarks>
+        /// <list type="bullet">
+        /// <item><description>If the model is static, this is the fixed context size determined by the model graph.</description></item>
+        /// <item><description>If the model is dynamic, this is the largest context size that can be set.</description></item>
+        /// </list>
+        /// </remarks>
+        /// <returns>Returns 0 if not found or on error.</returns>
+        public uint GetMaxContextTokens()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_max_context_tokens(Native);
+        }
+
+        /// <summary>Returns whether the model has dynamic context.</summary>
+        /// <remarks>
+        /// Dynamic context means the context size can be configured by the caller up to the maximum limit.
+        /// </remarks>
+        /// <returns><see langword="true"/> if the model has dynamic context, <see langword="false"/> otherwise.</returns>
+        public bool IsDynamicContext()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_is_dynamic_context(Native);
+        }
+
+        /// <summary>Returns the supported vision token lengths, or <see langword="null"/> if the model does not support vision.</summary>
+        public int[]? GetVisionSignatureSelection()
+        {
+            ThrowIfDisposed();
+            int count = NativeAPI.ModelInfo.litert_lm_loaded_file_vision_signature_selection(Native, null, 0);
+            if (count < 0) return null;
+            if (count == 0) return Array.Empty<int>();
+
+            int[] lengths = new int[count];
+            NativeAPI.ModelInfo.litert_lm_loaded_file_vision_signature_selection(Native, lengths, count);
+            return lengths;
+        }
+
+        /// <summary>
+        /// Returns the supported backends for a given modality, ordered by priority
+        /// (first entry is the default/highest-priority backend).
+        /// </summary>
+        public BackendType[] GetModalitySupportedBackends(Modality modality)
+        {
+            ThrowIfDisposed();
+            int count = NativeAPI.ModelInfo.litert_lm_loaded_file_modality_supported_backends(Native, modality, null, 0);
+            if (count <= 0)
+                return Array.Empty<BackendType>();
+
+            BackendType[] backends = new BackendType[count];
+            NativeAPI.ModelInfo.litert_lm_loaded_file_modality_supported_backends(Native, modality, backends, count);
+            return backends;
+        }
+
+        /// <summary>Returns the detected NPU brand of the model for a given modality.</summary>
+        public NpuBrand GetModalityNpuBrand(Modality modality)
+        {
+            ThrowIfDisposed();
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_modality_npu_brand(Native, modality);
+        }
+
+        /// <summary>Returns the target SoC name for a given modality (e.g. "SM8750", "Tensor_G5"), or <see langword="null"/> if not specified or not NPU-compiled.</summary>
+        public string? GetModalitySocName(Modality modality)
+        {
+            ThrowIfDisposed();
+            IntPtr ptr = NativeAPI.ModelInfo.litert_lm_loaded_file_modality_soc_name(Native, modality);
+            return ptr != IntPtr.Zero ? UnsafeUtils.MarshalStringUTF8(ptr) : null;
+        }
+
+        /// <summary>Returns the minimum LiteRT-LM runtime version required to run this model, or <see langword="null"/> if not defined.</summary>
+        public string? GetMinRuntimeVersion()
+        {
+            ThrowIfDisposed();
+            IntPtr ptr = NativeAPI.ModelInfo.litert_lm_loaded_file_min_runtime_version(Native);
+            return ptr != IntPtr.Zero ? UnsafeUtils.MarshalStringUTF8(ptr) : null;
+        }
+
+        /// <summary>Returns the model type of the loaded LiteRT-LM file.</summary>
+        public ModelType GetModelType()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_model_type(Native);
+        }
+
+        /// <summary>Returns the output embedding dimension for the model, or -1 if the model is not an embedding model or if the dimension is not defined.</summary>
+        public int GetEmbeddingDimension()
+        {
+            ThrowIfDisposed();
+            return NativeAPI.ModelInfo.litert_lm_loaded_file_embedding_dimension(Native);
+        }
+
+        /// <summary>Returns the supported embedding signature sequence lengths, or <see langword="null"/> if the model is not an embedding model.</summary>
+        public int[]? GetEmbeddingSignatureSelection()
+        {
+            ThrowIfDisposed();
+            int count = NativeAPI.ModelInfo.litert_lm_loaded_file_embedding_signature_selection(Native, null, 0);
+            if (count < 0) return null;
+            if (count == 0) return Array.Empty<int>();
+
+            int[] lengths = new int[count];
+            NativeAPI.ModelInfo.litert_lm_loaded_file_embedding_signature_selection(Native, lengths, count);
+            return lengths;
+        }
         
         protected override void ReleaseUnmanagedResources()
         {
@@ -2248,6 +2404,14 @@ namespace Uralstech.UAI.LiteRTLM
             
             if (Native == IntPtr.Zero)
                 throw new InvalidOperationException("Failed to create native embedding engine settings.");
+        }
+
+        /// <summary>Sets the number of threads for the CPU backend in Embedding Engine Settings.</summary>
+        /// <param name="numThreads">The number of threads.</param>
+        public void SetNumThreads(int numThreads)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_num_threads(Native, numThreads);
         }
 
         /// <summary>Sets the number of threads for the audio CPU backend in Embedding Engine Settings.</summary>
@@ -2298,12 +2462,28 @@ namespace Uralstech.UAI.LiteRTLM
             NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_max_input_length(Native, maxInputLength);
         }
 
+        /// <summary>Sets the minimum sequence length (in tokens) for text encoder signatures in Embedding Engine Settings.</summary>
+        /// <param name="minInputLength">The minimum input length. Passing a negative value unsets the option.</param>
+        public void SetMinInputLength(int minInputLength)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_min_input_length(Native, minInputLength);
+        }
+
         /// <summary>Sets the desired number of vision tokens generated per image in Embedding Engine Settings.</summary>
         /// <param name="visionTokensPerImage">The vision tokens per image. Passing a non-positive value unsets the option.</param>
         public void SetVisionTokensPerImage(int visionTokensPerImage)
         {
             ThrowIfDisposed();
             NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_vision_tokens_per_image(Native, visionTokensPerImage);
+        }
+
+        /// <summary>Sets the activation data type for the embedding engine settings.</summary>
+        /// <param name="activationDataType">The activation data type.</param>
+        public void SetActivationDataType(ActivationDataType activationDataType)
+        {
+            ThrowIfDisposed();
+            NativeAPI.EmbeddingEngineSettings.litert_lm_embedding_engine_settings_set_activation_data_type(Native, activationDataType);
         }
         
         protected override void ReleaseUnmanagedResources()
