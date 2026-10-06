@@ -18,7 +18,7 @@ set "BAZEL_OUT=%DRIVE%\bzl"
 :: set "BUILD_FILE_BACKUP=%TEMP%\tmp_%RANDOM%.bazel"
 
 set "PREBUILT_LIBS_COMMON=libLiteRt libGemmaModelConstraintProvider"
-set "PREBUILT_LIBS_PC=libLiteRtTopKWebGpuSampler libLiteRtWebGpuAccelerator libwebgpu_dawn"
+set "PREBUILT_LIBS_PC=libLiteRtTopKWebGpuSampler libLiteRtWebGpuAccelerator webgpu_dawn"
 
 goto :main
 
