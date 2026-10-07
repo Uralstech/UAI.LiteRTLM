@@ -146,7 +146,7 @@ private async Awaitable RunConversation()
                                           or RuntimePlatform.WindowsServer;
     
     bool supportsSpeculativeDecoding;
-    using (Capabilities modelCapabilities = new(modelPath))
+    using (ModelInfo modelCapabilities = new(modelPath))
         supportsSpeculativeDecoding = modelCapabilities.HasSpeculativeDecodingSupport();
 
     using EngineSettings engineSettings = new(modelPath, BackendNames.GPU);
