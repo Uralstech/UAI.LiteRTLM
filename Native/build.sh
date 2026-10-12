@@ -51,11 +51,52 @@ patch_prebuilt_lib_android() {
     fi
 }
 
-patch_lib_ios() {
+# https://github.com/dotnet/docs/blob/main/docs/core/deploying/native-aot/ios-like-platforms/creating-and-consuming-custom-frameworks.md
+construct_framework_ios() {
     local arch="$1"
-    local dst="${PLUGIN_DIR}/iOS/${arch}"
+    local platform_libs="$2"
 
-    install_name_tool -id "@rpath/${BUILT_SYMBOL}.dylib" "${dst}/${BUILT_SYMBOL}.dylib"
+    local framework="${BUILT_SYMBOL}.framework"
+
+    local dst="${PLUGIN_DIR}/iOS/${arch}/${framework}"
+    local main_lib="${dst}/${BUILT_SYMBOL}"
+
+    local prebuilts_src="./prebuilt/ios_${arch}"
+    local prebuilts_dst="${dst}/Libraries"
+
+    rm -rf "${dst}"
+    mkdir -p "${dst}"
+
+    lipo -create "${BUILD_DIR}/${BUILT_SYMBOL}.dylib" -output       "${main_lib}" || return 1
+    install_name_tool -id "@rpath/${framework}/${BUILT_SYMBOL}"     "${main_lib}" || return 1
+    install_name_tool -add_rpath "@loader_path/Libraries"           "${main_lib}" || return 1
+
+    cat <<EOF > "${dst}/Info.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>${BUILT_SYMBOL}</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.uralstech.uai.litertlm.native.ios</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>CFBundleExecutable</key>
+    <string>${BUILT_SYMBOL}</string>
+    <key>CFBundlePackageType</key>
+    <string>FMWK</string>
+</dict>
+</plist>
+EOF
+
+    mkdir -p "${prebuilts_dst}"
+    for lib in ${PREBUILT_LIBS_COMMON} ${platform_libs}; do
+
+        force_copy_file             \
+            "${prebuilts_src}/${lib}.dylib"   \
+            "${prebuilts_dst}/${lib}.dylib"
+    done
 }
 
 force_copy_file() {
@@ -121,11 +162,9 @@ copy_libs macos arm64 dylib macOS "${PREBUILT_LIBS_APPLE}"
 # ------------------------------   iOS   ------------------------------
 
 build ios_arm64 || exit 1
-copy_libs ios arm64 dylib iOS "${PREBUILT_LIBS_APPLE}"
-patch_lib_ios arm64
+construct_framework_ios arm64 "${PREBUILT_LIBS_APPLE}" || exit 1
 
 build ios_sim_arm64 || exit 1
-copy_libs ios sim_arm64 dylib iOS "${PREBUILT_LIBS_APPLE}"
-patch_lib_ios sim_arm64
+construct_framework_ios sim_arm64 "${PREBUILT_LIBS_APPLE}" || exit 1
 
 echo "LITERT_LM_REV = \"${HEAD_COMMIT}\"" > "${PLUGIN_DIR}/.build_sources.arm64.txt"

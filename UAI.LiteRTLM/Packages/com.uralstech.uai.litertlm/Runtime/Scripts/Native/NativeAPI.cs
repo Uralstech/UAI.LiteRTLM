@@ -20,7 +20,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
 {
     public static class NativeAPI
     {
-        public const string LibLiteRTLM = "litert-lm";
+        public const string LibLiteRTLM =
+#if !UNITY_IOS || UNITY_EDITOR
+        "litert-lm";
+#else
+        "__Internal";
+#endif
 
         /// <summary>Sets the minimum log level for the LiteRT LM library.</summary>
         [DllImport(LibLiteRTLM, CallingConvention = CallingConvention.Cdecl)]
