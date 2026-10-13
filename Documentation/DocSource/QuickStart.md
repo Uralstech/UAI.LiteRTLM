@@ -107,6 +107,10 @@ Provides Metal acceleration on iOS devices, but the iOS simulator uses CPU-only 
 
 ---
 
+> [!IMPORTANT]
+> 2.7.0-preview.2 contains an important fix for iOS, which allows you to upload apps using this package to App Store Connect.
+> As of writing, this fix is not yet available for the .NET 6+ NuGet package.
+
 ## Android GPU Acceleration
 
 To enable GPU acceleration on Android, add the following to the `<application>` section of your `AndroidManifest.xml` to enable OpenCL:
