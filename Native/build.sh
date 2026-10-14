@@ -15,15 +15,21 @@ cd LiteRT-LM || exit 1
 # }
 
 # pin_litert_lm_0_17_1 || exit 1
-HEAD_COMMIT=$(git rev-parse HEAD)
+HEAD_COMMIT="$(git rev-parse HEAD)"
 
 PLUGIN_DIR="../../UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins"
 
 BUILT_SYMBOL="liblitert-lm"
 BUILD_DIR="./bazel-bin/c"
 
+CLEANUP_FILES=""
+trap 'for file in ${CLEANUP_FILES}; do rm -rf "${file}"; done' EXIT
+
+IOS_FRAMEWORKS=""
+
 # BUILD_FILE="./c/BUILD"
 # BUILD_FILE_BACKUP="$(mktemp)"
+# CLEANUP_FILES="${CLEANUP_FILES} ${BUILD_FILE_BACKUP}"
 
 PREBUILT_LIBS_COMMON="libLiteRt libGemmaModelConstraintProvider"
 PREBUILT_LIBS_ANDROID="libLiteRtTopKOpenClSampler libLiteRtOpenClAccelerator"
@@ -57,19 +63,20 @@ construct_framework_ios() {
     local platform_libs="$2"
 
     local framework="${BUILT_SYMBOL}.framework"
-
-    local dst="${PLUGIN_DIR}/iOS/${arch}/${framework}"
-    local main_lib="${dst}/${BUILT_SYMBOL}"
-
     local prebuilts_src="./prebuilt/ios_${arch}"
+
+    local temp_dir="$(mktemp -d)" || return 1
+    CLEANUP_FILES="${CLEANUP_FILES} ${temp_dir}"
+    
+    local dst="${temp_dir}/${framework}"
+    mkdir "${dst}"
+
+    local lib_dst="${dst}/${BUILT_SYMBOL}"
     local prebuilts_dst="${dst}/Libraries"
 
-    rm -rf "${dst}"
-    mkdir -p "${dst}"
-
-    lipo -create "${BUILD_DIR}/${BUILT_SYMBOL}.dylib" -output       "${main_lib}" || return 1
-    install_name_tool -id "@rpath/${framework}/${BUILT_SYMBOL}"     "${main_lib}" || return 1
-    install_name_tool -add_rpath "@loader_path/Libraries"           "${main_lib}" || return 1
+    lipo -create "${BUILD_DIR}/${BUILT_SYMBOL}.dylib" -output   "${lib_dst}" || return 1
+    install_name_tool -id "@rpath/${framework}/${BUILT_SYMBOL}" "${lib_dst}" || return 1
+    install_name_tool -add_rpath "@loader_path/Libraries"       "${lib_dst}" || return 1
 
     cat <<EOF > "${dst}/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -93,10 +100,27 @@ EOF
     mkdir -p "${prebuilts_dst}"
     for lib in ${PREBUILT_LIBS_COMMON} ${platform_libs}; do
 
-        force_copy_file             \
-            "${prebuilts_src}/${lib}.dylib"   \
+        force_copy_file                     \
+            "${prebuilts_src}/${lib}.dylib" \
             "${prebuilts_dst}/${lib}.dylib"
     done
+
+    IOS_FRAMEWORKS="${IOS_FRAMEWORKS} ${dst}"
+}
+
+construct_xcframework_ios() {
+
+    local dst="${PLUGIN_DIR}/iOS/${BUILT_SYMBOL}.xcframework"
+    rm -rf "${dst}"
+
+    local command="xcodebuild -create-xcframework"
+    for framework in ${IOS_FRAMEWORKS}; do
+        
+        command="${command} -framework ${framework}"
+    done
+
+    command="${command} -output ${dst}"
+    eval ${command}
 }
 
 force_copy_file() {
@@ -110,7 +134,11 @@ force_copy_file() {
 # For LiteRT-LM v0.16.0
 # patch_capabilities() {
 #     cp "${BUILD_FILE}" "${BUILD_FILE_BACKUP}" || return 1
-#     trap 'force_copy_file "${BUILD_FILE_BACKUP}" "${BUILD_FILE}"; rm -f "${BUILD_FILE_BACKUP}"' EXIT
+# 
+#     extract_trap_cmd() { echo "$3"; }
+#     old_trap="$(eval "extract_trap_cmd $(trap -p EXIT)")"
+# 
+#     trap 'force_copy_file "${BUILD_FILE_BACKUP}" "${BUILD_FILE}"; ${old_trap}' EXIT
 #     python3 "${BUILD_SCRIPTS_DIR}/patch_capabilities.py" "$BUILD_FILE" || return 1
 # }
 
@@ -166,5 +194,7 @@ construct_framework_ios arm64 "${PREBUILT_LIBS_APPLE}" || exit 1
 
 build ios_sim_arm64 || exit 1
 construct_framework_ios sim_arm64 "${PREBUILT_LIBS_APPLE}" || exit 1
+
+construct_xcframework_ios || exit 1
 
 echo "LITERT_LM_REV = \"${HEAD_COMMIT}\"" > "${PLUGIN_DIR}/.build_sources.arm64.txt"
