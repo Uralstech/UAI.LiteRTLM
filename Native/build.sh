@@ -22,10 +22,10 @@ PLUGIN_DIR="../../UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugi
 BUILT_SYMBOL="liblitert-lm"
 BUILD_DIR="./bazel-bin/c"
 
+PREBUILTS_DIR="./prebuilt"
+
 CLEANUP_FILES=""
 trap 'for file in ${CLEANUP_FILES}; do rm -rf "${file}"; done' EXIT
-
-IOS_FRAMEWORKS=""
 
 # BUILD_FILE="./c/BUILD"
 # BUILD_FILE_BACKUP="$(mktemp)"
@@ -57,78 +57,104 @@ patch_prebuilt_lib_android() {
     fi
 }
 
-# https://github.com/dotnet/docs/blob/main/docs/core/deploying/native-aot/ios-like-platforms/creating-and-consuming-custom-frameworks.md
-construct_framework_ios() {
-    local arch="$1"
-    local platform_libs="$2"
-
-    local framework="${BUILT_SYMBOL}.framework"
-    local prebuilts_src="./prebuilt/ios_${arch}"
-
-    local temp_dir="$(mktemp -d)" || return 1
-    CLEANUP_FILES="${CLEANUP_FILES} ${temp_dir}"
-    
-    local dst="${temp_dir}/${framework}"
-    mkdir "${dst}"
-
-    local lib_dst="${dst}/${BUILT_SYMBOL}"
-    local prebuilts_dst="${dst}/Libraries"
-
-    lipo -create "${BUILD_DIR}/${BUILT_SYMBOL}.dylib" -output   "${lib_dst}" || return 1
-    install_name_tool -id "@rpath/${framework}/${BUILT_SYMBOL}" "${lib_dst}" || return 1
-    install_name_tool -add_rpath "@loader_path/Libraries"       "${lib_dst}" || return 1
-
-    cat <<EOF > "${dst}/Info.plist"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleName</key>
-    <string>${BUILT_SYMBOL}</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.uralstech.uai.litertlm.native.ios</string>
-    <key>CFBundleVersion</key>
-    <string>1.0</string>
-    <key>CFBundleExecutable</key>
-    <string>${BUILT_SYMBOL}</string>
-    <key>CFBundlePackageType</key>
-    <string>FMWK</string>
-</dict>
-</plist>
-EOF
-
-    mkdir -p "${prebuilts_dst}"
-    for lib in ${PREBUILT_LIBS_COMMON} ${platform_libs}; do
-
-        force_copy_file                     \
-            "${prebuilts_src}/${lib}.dylib" \
-            "${prebuilts_dst}/${lib}.dylib"
-    done
-
-    IOS_FRAMEWORKS="${IOS_FRAMEWORKS} ${dst}"
-}
-
-construct_xcframework_ios() {
-
-    local dst="${PLUGIN_DIR}/iOS/${BUILT_SYMBOL}.xcframework"
-    rm -rf "${dst}"
-
-    local command="xcodebuild -create-xcframework"
-    for framework in ${IOS_FRAMEWORKS}; do
-        
-        command="${command} -framework ${framework}"
-    done
-
-    command="${command} -output ${dst}"
-    eval ${command}
-}
-
 force_copy_file() {
     local src_file="$1"
     local dst_file="$2"
 
     rm -f "${dst_file}"
     cp "${src_file}" "${dst_file}"
+}
+
+copy_ios_output() {
+    local arch="$1"
+    local dst="$2"
+
+    local bin="${BUILT_SYMBOL}.dylib"
+    local bin_dir="${dst}/ios_${arch}"
+
+    mkdir -p "${bin_dir}"
+    force_copy_file             \
+        "${BUILD_DIR}/${bin}"   \
+        "${bin_dir}/${bin}"
+}
+
+create_xcframework_ios() {
+    local lib_name="$1"
+    local src_dir="$2"
+    local archs="$3"
+    shift 3
+
+    local temp_dir="$(mktemp -d)" || return 1
+    CLEANUP_FILES="${CLEANUP_FILES} ${temp_dir}"
+
+    local frameworks=""
+    for arch in ${archs}; do
+
+        local framework_name="${lib_name}.framework"
+        local framework_path="${temp_dir}/${arch}/${framework_name}"
+
+        mkdir -p "${framework_path}"
+        local framework_lib_path="${framework_path}/${lib_name}"
+
+        lipo -create "${src_dir}/ios_${arch}/${lib_name}.dylib" -output "${framework_lib_path}" || return 1
+        install_name_tool -id "@rpath/${framework_name}/${lib_name}"    "${framework_lib_path}" || return 1
+
+        for dependency in $@; do
+
+            install_name_tool -add_rpath "@executable_path/Frameworks/${dependency}.framework" "${framework_lib_path}" || return 1
+        done
+
+        cat <<EOF > "${framework_path}/Info.plist"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>${lib_name}</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.uralstech.uai.litertlm.native.ios.${lib_name}</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleExecutable</key>
+    <string>${lib_name}</string>
+    <key>CFBundlePackageType</key>
+    <string>FMWK</string>
+    <key>MinimumOSVersion</key>
+    <string>15.0</string>
+</dict>
+</plist>
+EOF
+
+        frameworks="${frameworks} ${framework_path}"
+    done
+
+    local dst="${PLUGIN_DIR}/iOS/${lib_name}.xcframework"
+    rm -rf "${dst}"
+
+    local command="xcodebuild -create-xcframework"
+    for framework in ${frameworks}; do
+        
+        command="${command} -framework ${framework}"
+    done
+
+    command="${command} -output ${dst}"
+    eval "${command}"
+}
+
+package_xcframeworks_ios() {
+    local build_dir="$1"
+    local archs="$2"
+
+    local all_prebuilts="${PREBUILT_LIBS_COMMON} ${PREBUILT_LIBS_APPLE}"
+
+    for lib_name in ${all_prebuilts}; do
+
+        create_xcframework_ios "${lib_name}" "${PREBUILTS_DIR}" "${archs}" || return 1
+    done
+
+    create_xcframework_ios "${BUILT_SYMBOL}" "${build_dir}" "${archs}" || return 1
 }
 
 # For LiteRT-LM v0.16.0
@@ -149,7 +175,7 @@ copy_libs() {
     local plugin_subdir="$4"
     local platform_libs="$5"
 
-    local src="./prebuilt/${platform}_${arch}"
+    local src="${PREBUILTS_DIR}/${platform}_${arch}"
     local dst="${PLUGIN_DIR}/${plugin_subdir}/${arch}"
 
     mkdir -p "$dst"
@@ -189,12 +215,15 @@ copy_libs macos arm64 dylib macOS "${PREBUILT_LIBS_APPLE}"
 
 # ------------------------------   iOS   ------------------------------
 
+ios_out="$(mktemp -d)" || exit 1
+CLEANUP_FILES="${CLEANUP_FILES} ${ios_out}"
+
 build ios_arm64 || exit 1
-construct_framework_ios arm64 "${PREBUILT_LIBS_APPLE}" || exit 1
+copy_ios_output arm64 "${ios_out}"
 
 build ios_sim_arm64 || exit 1
-construct_framework_ios sim_arm64 "${PREBUILT_LIBS_APPLE}" || exit 1
+copy_ios_output sim_arm64 "${ios_out}"
 
-construct_xcframework_ios || exit 1
+package_xcframeworks_ios "${ios_out}" "arm64 sim_arm64" || exit 1
 
 echo "LITERT_LM_REV = \"${HEAD_COMMIT}\"" > "${PLUGIN_DIR}/.build_sources.arm64.txt"

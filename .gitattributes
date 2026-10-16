@@ -1,3 +1,13 @@
 *.so filter=lfs diff=lfs merge=lfs -text
 *.dylib filter=lfs diff=lfs merge=lfs -text
 *.dll filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libLiteRt.xcframework/ios-arm64/libLiteRt.framework/libLiteRt filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libGemmaModelConstraintProvider.xcframework/ios-arm64/libGemmaModelConstraintProvider.framework/libGemmaModelConstraintProvider filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libLiteRtTopKMetalSampler.xcframework/ios-arm64/libLiteRtTopKMetalSampler.framework/libLiteRtTopKMetalSampler filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libLiteRtMetalAccelerator.xcframework/ios-arm64/libLiteRtMetalAccelerator.framework/libLiteRtMetalAccelerator filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/liblitert-lm.xcframework/ios-arm64/liblitert-lm.framework/liblitert-lm filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libLiteRt.xcframework/ios-arm64-simulator/libLiteRt.framework/libLiteRt filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libGemmaModelConstraintProvider.xcframework/ios-arm64-simulator/libGemmaModelConstraintProvider.framework/libGemmaModelConstraintProvider filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libLiteRtTopKMetalSampler.xcframework/ios-arm64-simulator/libLiteRtTopKMetalSampler.framework/libLiteRtTopKMetalSampler filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/libLiteRtMetalAccelerator.xcframework/ios-arm64-simulator/libLiteRtMetalAccelerator.framework/libLiteRtMetalAccelerator filter=lfs diff=lfs merge=lfs -text
+UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins/iOS/liblitert-lm.xcframework/ios-arm64-simulator/liblitert-lm.framework/liblitert-lm filter=lfs diff=lfs merge=lfs -text
