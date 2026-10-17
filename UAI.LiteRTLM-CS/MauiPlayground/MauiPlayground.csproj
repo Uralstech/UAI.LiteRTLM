@@ -15,7 +15,6 @@
 		<ApplicationTitle>UAI.LiteRTLM.Maui</ApplicationTitle>
 		<ApplicationId>com.uralstech.uai.litertlm.maui</ApplicationId>
 
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">16.0</SupportedOSPlatformVersion>

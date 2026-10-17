@@ -1,0 +1,12 @@
+<Project>
+    <ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'ios'">
+        <_UAI_LiteRTLM_XCFrameworkInfo
+          Include="$(MSBuildThisFileDirectory)../runtimes/ios/native/*.xcframework/Info.plist" />
+
+        <NativeReference
+          Include="@(_UAI_LiteRTLM_XCFrameworkInfo->'%(RootDir)%(Directory)')">
+            <Kind>Framework</Kind>
+            <Frameworks>AudioToolbox AVFoundation CoreFoundation Foundation Security UIKit Metal</Frameworks>
+        </NativeReference>
+    </ItemGroup>
+</Project>
