@@ -108,8 +108,11 @@ Provides Metal acceleration on iOS devices, but the iOS simulator uses CPU-only 
 ---
 
 > [!IMPORTANT]
-> 2.7.0-preview.2 contains an important fix for iOS, which allows you to upload apps using this package to App Store Connect.
+> 2.7.0-preview.3 contains an important fix for iOS, which allows you to upload apps using this package to App Store Connect.
 > As of writing, this fix is not yet available for the .NET 6+ NuGet package.
+
+> [!IMPORTANT]
+> When upgrading from 2.7.0-preview.2 to 2.7.0-preview.3, please do a "Replace" Unity build for the Xcode project.
 
 ## Android GPU Acceleration
 
