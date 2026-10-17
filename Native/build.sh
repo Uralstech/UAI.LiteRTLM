@@ -84,24 +84,45 @@ create_xcframework_ios() {
     local archs="$3"
     shift 3
 
+    lib_dylib="${lib_name}.dylib"
+
     local temp_dir="$(mktemp -d)" || return 1
     CLEANUP_FILES="${CLEANUP_FILES} ${temp_dir}"
 
     local frameworks=""
     for arch in ${archs}; do
 
-        local framework_name="${lib_name}.framework"
+        local framework_name="${lib_dylib}.framework"
         local framework_path="${temp_dir}/${arch}/${framework_name}"
 
         mkdir -p "${framework_path}"
-        local framework_lib_path="${framework_path}/${lib_name}"
+        local framework_lib_path="${framework_path}/${lib_dylib}"
 
-        lipo -create "${src_dir}/ios_${arch}/${lib_name}.dylib" -output "${framework_lib_path}" || return 1
-        install_name_tool -id "@rpath/${framework_name}/${lib_name}"    "${framework_lib_path}" || return 1
+        force_copy_file "${src_dir}/ios_${arch}/${lib_dylib}"               "${framework_lib_path}"
+
+        # Hopefully LiteRT-LM <= v0.18.0-specific
+        if [[ "${lib_name}" == "libGemmaModelConstraintProvider" ]]; then
+
+            local dylib_temp="$(mktemp)"
+            CLEANUP_FILES="${CLEANUP_FILES} ${dylib_temp}"
+
+            local vtool_arch="ios"
+            [[ "${arch}" == "sim_arm64" ]] && vtool_arch="iossim"
+
+            xcrun vtool -set-build-version "${vtool_arch}" 15.0 26.4 -replace -output "${dylib_temp}"   "${framework_lib_path}" || return 1
+            force_copy_file "${dylib_temp}"                                                             "${framework_lib_path}"
+        fi
+
+        if [[ "${lib_name}" == "libLiteRtTopKMetalSampler" || "${lib_name}" == "libLiteRtMetalAccelerator" ]]; then
+            install_name_tool -delete_rpath "@executable_path/Frameworks"   "${framework_lib_path}" || return 1
+            install_name_tool -delete_rpath "@loader_path/Frameworks"       "${framework_lib_path}" || return 1
+        fi
+
+        install_name_tool -id "@rpath/${framework_name}/${lib_dylib}"       "${framework_lib_path}" || return 1
 
         for dependency in $@; do
 
-            install_name_tool -add_rpath "@executable_path/Frameworks/${dependency}.framework" "${framework_lib_path}" || return 1
+            install_name_tool -add_rpath "@executable_path/Frameworks/${dependency}.dylib.framework" "${framework_lib_path}" || return 1
         done
 
         cat <<EOF > "${framework_path}/Info.plist"
@@ -110,7 +131,7 @@ create_xcframework_ios() {
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>${lib_name}</string>
+    <string>${lib_dylib}</string>
     <key>CFBundleIdentifier</key>
     <string>com.uralstech.uai.litertlm.native.ios.${lib_name}</string>
     <key>CFBundleVersion</key>
@@ -118,7 +139,7 @@ create_xcframework_ios() {
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleExecutable</key>
-    <string>${lib_name}</string>
+    <string>${lib_dylib}</string>
     <key>CFBundlePackageType</key>
     <string>FMWK</string>
     <key>MinimumOSVersion</key>
@@ -130,7 +151,7 @@ EOF
         frameworks="${frameworks} ${framework_path}"
     done
 
-    local dst="${PLUGIN_DIR}/iOS/${lib_name}.xcframework"
+    local dst="${PLUGIN_DIR}/iOS/${lib_dylib}.xcframework"
     rm -rf "${dst}"
 
     local command="xcodebuild -create-xcframework"
@@ -154,7 +175,7 @@ package_xcframeworks_ios() {
         create_xcframework_ios "${lib_name}" "${PREBUILTS_DIR}" "${archs}" || return 1
     done
 
-    create_xcframework_ios "${BUILT_SYMBOL}" "${build_dir}" "${archs}" || return 1
+    create_xcframework_ios "${BUILT_SYMBOL}" "${build_dir}" "${archs}" "${all_prebuilts}" || return 1
 }
 
 # For LiteRT-LM v0.16.0
