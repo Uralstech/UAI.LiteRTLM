@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 9535d28e2bb8e409688b6461054a882f
+guid: 51dac433aad7e43948e66bffa1d2cd67
 PluginImporter:
   externalObjects: {}
   serializedVersion: 3
@@ -55,7 +55,7 @@ PluginImporter:
         AddToEmbeddedBinaries: true
         CPU: ARM64, ARM64Simulator
         CompileFlags: 
-        FrameworkDependencies: AudioToolbox;AVFoundation;CoreFoundation;Foundation;Security;UIKit;Metal;
+        FrameworkDependencies: AudioToolbox;AVFoundation;CoreFoundation;Foundation;Security;UIKit;AVFAudio;Metal;
         XcodeProjectType: All
   userData: 
   assetBundleName: 

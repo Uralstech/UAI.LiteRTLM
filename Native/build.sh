@@ -1,20 +1,5 @@
-# BUILD_SCRIPTS_DIR=$(pwd)
 cd LiteRT-LM || exit 1
 
-# Fix for LiteRT-LM v0.17.1 issue #3247
-# pin_litert_lm_0_17_1() {
-#     local repo="https://github.com/Uralstech/LiteRT-LM.git"
-#     local commit="dadb79c64229af33dab023e94e7030e872b7a915"
-# 
-#     # The above fork at the commit ID is equivalent to running:
-#     # > git reset --hard v0.17.1
-#     # > git cherry-pick a1b8ec1
-# 
-#     git fetch "${repo}" "${commit}" || return 1
-#     git reset --hard "${commit}" || return 1
-# }
-
-# pin_litert_lm_0_17_1 || exit 1
 HEAD_COMMIT="$(git rev-parse HEAD)"
 
 PLUGIN_DIR="../../UAI.LiteRTLM/Packages/com.uralstech.uai.litertlm/Runtime/Plugins"
@@ -27,13 +12,9 @@ PREBUILTS_DIR="./prebuilt"
 CLEANUP_FILES=""
 trap 'for file in ${CLEANUP_FILES}; do rm -rf "${file}"; done' EXIT
 
-# BUILD_FILE="./c/BUILD"
-# BUILD_FILE_BACKUP="$(mktemp)"
-# CLEANUP_FILES="${CLEANUP_FILES} ${BUILD_FILE_BACKUP}"
-
 PREBUILT_LIBS_COMMON="libLiteRt libGemmaModelConstraintProvider"
-PREBUILT_LIBS_ANDROID="libLiteRtTopKOpenClSampler libLiteRtOpenClAccelerator"
-PREBUILT_LIBS_APPLE="libLiteRtTopKMetalSampler libLiteRtMetalAccelerator"
+PREBUILT_LIBS_ANDROID="libLiteRtOpenClAccelerator"
+PREBUILT_LIBS_APPLE="libLiteRtMetalAccelerator"
 
 build() {
     local config="$1"
@@ -46,23 +27,35 @@ build() {
 
 }
 
-patch_prebuilt_lib_android() {
-    local arch="$1"
-    local lib="$2"
-    local needed="$3"
-    local dst="${PLUGIN_DIR}/Android/${arch}/${lib}.so"
-
-    if ! patchelf --print-needed "${dst}" | grep -q "^${needed}\.so$"; then
-        patchelf --add-needed "${needed}.so" "${dst}" || return 1
-    fi
-}
-
 force_copy_file() {
     local src_file="$1"
     local dst_file="$2"
 
     rm -f "${dst_file}"
     cp "${src_file}" "${dst_file}"
+}
+
+copy_libs() {
+    local platform="$1"
+    local arch="$2"
+    local extension="$3"
+    local plugin_subdir="$4"
+    local platform_libs="$5"
+
+    local src="${PREBUILTS_DIR}/${platform}_${arch}"
+    local dst="${PLUGIN_DIR}/${plugin_subdir}/${arch}"
+
+    mkdir -p "$dst"
+    for lib in ${PREBUILT_LIBS_COMMON} ${platform_libs}; do
+
+        force_copy_file                     \
+            "${src}/${lib}.${extension}"    \
+            "${dst}/${lib}.${extension}"
+    done
+
+    force_copy_file                                 \
+        "${BUILD_DIR}/${BUILT_SYMBOL}.${extension}" \
+        "${dst}/${BUILT_SYMBOL}.${extension}"
 }
 
 copy_ios_output() {
@@ -82,7 +75,8 @@ create_xcframework_ios() {
     local lib_name="$1"
     local src_dir="$2"
     local archs="$3"
-    shift 3
+    local name="$4"
+    shift 4
 
     lib_dylib="${lib_name}.dylib"
 
@@ -98,27 +92,13 @@ create_xcframework_ios() {
         mkdir -p "${framework_path}"
         local framework_lib_path="${framework_path}/${lib_dylib}"
 
-        force_copy_file "${src_dir}/ios_${arch}/${lib_dylib}"               "${framework_lib_path}"
-
-        # Hopefully LiteRT-LM <= v0.18.0-specific
-        if [[ "${lib_name}" == "libGemmaModelConstraintProvider" ]]; then
-
-            local dylib_temp="$(mktemp)"
-            CLEANUP_FILES="${CLEANUP_FILES} ${dylib_temp}"
-
-            local vtool_arch="ios"
-            [[ "${arch}" == "sim_arm64" ]] && vtool_arch="iossim"
-
-            xcrun vtool -set-build-version "${vtool_arch}" 15.0 26.4 -replace -output "${dylib_temp}"   "${framework_lib_path}" || return 1
-            force_copy_file "${dylib_temp}"                                                             "${framework_lib_path}"
+        force_copy_file "${src_dir}/ios_${arch}/${lib_dylib}" "${framework_lib_path}"
+        
+        if [[ "${name}" == "full_name" ]]; then
+            install_name_tool -id "@rpath/${lib_dylib}.framework/${lib_dylib}"  "${framework_lib_path}" || return 1
+        else
+            install_name_tool -id "@rpath/${lib_dylib}"                         "${framework_lib_path}" || return 1
         fi
-
-        if [[ "${lib_name}" == "libLiteRtTopKMetalSampler" || "${lib_name}" == "libLiteRtMetalAccelerator" ]]; then
-            install_name_tool -delete_rpath "@executable_path/Frameworks"   "${framework_lib_path}" || return 1
-            install_name_tool -delete_rpath "@loader_path/Frameworks"       "${framework_lib_path}" || return 1
-        fi
-
-        install_name_tool -id "@rpath/${framework_name}/${lib_dylib}"       "${framework_lib_path}" || return 1
 
         for dependency in $@; do
 
@@ -151,7 +131,13 @@ EOF
         frameworks="${frameworks} ${framework_path}"
     done
 
-    local dst="${PLUGIN_DIR}/iOS/${lib_dylib}.xcframework"
+    local dst
+    if [[ "${name}" == "full_name" ]]; then
+        dst="${PLUGIN_DIR}/iOS/${lib_dylib}.xcframework"
+    else
+        dst="${PLUGIN_DIR}/iOS/Deps~/${lib_dylib}.xcframework"
+    fi
+
     rm -rf "${dst}"
 
     local command="xcodebuild -create-xcframework"
@@ -172,56 +158,20 @@ package_xcframeworks_ios() {
 
     for lib_name in ${all_prebuilts}; do
 
-        create_xcframework_ios "${lib_name}" "${PREBUILTS_DIR}" "${archs}" || return 1
+        create_xcframework_ios "${lib_name}" "${PREBUILTS_DIR}" "${archs}" lib_name || return 1
     done
 
-    create_xcframework_ios "${BUILT_SYMBOL}" "${build_dir}" "${archs}" "${all_prebuilts}" || return 1
+    create_xcframework_ios "${BUILT_SYMBOL}" "${build_dir}" "${archs}" full_name "${all_prebuilts}" || return 1
 }
-
-# For LiteRT-LM v0.16.0
-# patch_capabilities() {
-#     cp "${BUILD_FILE}" "${BUILD_FILE_BACKUP}" || return 1
-# 
-#     extract_trap_cmd() { echo "$3"; }
-#     old_trap="$(eval "extract_trap_cmd $(trap -p EXIT)")"
-# 
-#     trap 'force_copy_file "${BUILD_FILE_BACKUP}" "${BUILD_FILE}"; ${old_trap}' EXIT
-#     python3 "${BUILD_SCRIPTS_DIR}/patch_capabilities.py" "$BUILD_FILE" || return 1
-# }
-
-copy_libs() {
-    local platform="$1"
-    local arch="$2"
-    local extension="$3"
-    local plugin_subdir="$4"
-    local platform_libs="$5"
-
-    local src="${PREBUILTS_DIR}/${platform}_${arch}"
-    local dst="${PLUGIN_DIR}/${plugin_subdir}/${arch}"
-
-    mkdir -p "$dst"
-    for lib in ${PREBUILT_LIBS_COMMON} ${platform_libs}; do
-
-        force_copy_file                     \
-            "${src}/${lib}.${extension}"    \
-            "${dst}/${lib}.${extension}"
-    done
-
-    force_copy_file                                 \
-        "${BUILD_DIR}/${BUILT_SYMBOL}.${extension}" \
-        "${dst}/${BUILT_SYMBOL}.${extension}"
-}
-
-# patch_capabilities || exit 1
 
 # Set ANDROID_NDK_HOME before running this
 # ------------------------------ Android ------------------------------
 
-build android_arm64 --linkopt=-Wl,-z,max-page-size=16384 || exit 1
-copy_libs android arm64 so Android "${PREBUILT_LIBS_ANDROID}"
+build android_arm64 --linkopt=-Wl,-z,max-page-size=16384    \
+                    --linkopt=-Wl,-z,common-page-size=16384 || exit 1
 
-patch_prebuilt_lib_android arm64 libLiteRtTopKOpenClSampler "${BUILT_SYMBOL}" || exit 1
-# patch_prebuilt_lib_android arm64 libLiteRtOpenClAccelerator "libandroid" || exit 1 # LiteRT-LM v0.17.0-specific
+copy_libs android arm64 so Android "${PREBUILT_LIBS_ANDROID} libwebgpu_dawn" # Dawn added only for v0.19.x
+
 
 # ------------------------------  macOS  ------------------------------
 
@@ -231,7 +181,7 @@ patch_prebuilt_lib_android arm64 libLiteRtTopKOpenClSampler "${BUILT_SYMBOL}" ||
 build macos_arm64 --linkopt=-Wl,-rpath,@loader_path \
     --define=litert_runtime_link_mode=dynamic || exit 1
 
-copy_libs macos arm64 dylib macOS "${PREBUILT_LIBS_APPLE}"
+copy_libs macos arm64 dylib macOS "${PREBUILT_LIBS_APPLE} libwebgpu_dawn" # Dawn added only for v0.19.x
 
 
 # ------------------------------   iOS   ------------------------------

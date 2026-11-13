@@ -1,11 +1,7 @@
 @echo off
 
 set "DRIVE=%~d0"
-:: set "BUILD_SCRIPTS_DIR=%CD%"
 cd LiteRT-LM || exit /b 1
-
-:: call :pin_litert_lm_0_17_1
-:: if errorlevel 1 exit /b 1
 
 for /f %%H in ('git rev-parse HEAD') do set HEAD_COMMIT=%%H
 
@@ -14,36 +10,17 @@ set "PLUGIN_DIR=..\..\UAI.LiteRTLM\Packages\com.uralstech.uai.litertlm\Runtime\P
 set "BUILD_DIR=.\bazel-bin\c"
 set "BAZEL_OUT=%DRIVE%\bzl"
 
-:: set "BUILD_FILE=.\c\BUILD"
-:: set "BUILD_FILE_BACKUP=%TEMP%\tmp_%RANDOM%.bazel"
-
 set "PREBUILT_LIBS_COMMON=libLiteRt libGemmaModelConstraintProvider"
-set "PREBUILT_LIBS_PC=libLiteRtTopKWebGpuSampler libLiteRtWebGpuAccelerator webgpu_dawn"
+set "PREBUILT_LIBS_PC=libLiteRtWebGpuAccelerator webgpu_dawn"
 
 goto :main
-
-:: Fix for LiteRT-LM v0.17.1 issue #3247
-:: :pin_litert_lm_0_17_1
-:: set "LITERT_LM_REPO=https://github.com/Uralstech/LiteRT-LM.git"
-:: set "LITERT_LM_COMMIT=dadb79c64229af33dab023e94e7030e872b7a915"
-:: 
-:: :: The above fork at the commit ID is equivalent to running:
-:: :: > git reset --hard v0.17.1
-:: :: > git cherry-pick a1b8ec1
-:: 
-:: git fetch "%LITERT_LM_REPO%" "%LITERT_LM_COMMIT%"
-:: if errorlevel 1 exit /b 1
-:: 
-:: git reset --hard "%LITERT_LM_COMMIT%"
-:: exit /b %ERRORLEVEL%
 
 :build
 set "CONFIG=%~1"
 
 bazelisk                        ^
     --output_base="%BAZEL_OUT%" ^
-    build                       ^
-    --config=%CONFIG%           ^
+    build --config=%CONFIG%     ^
     -c opt                      ^
     %~2 %~3 %~4 %~5             ^
     %~6 %~7 %~8 %~9             ^
@@ -59,17 +36,6 @@ if exist "%COPY_DST%" del /f /q "%COPY_DST%"
 copy /y "%COPY_SRC%" "%COPY_DST%"
 
 exit /b 0
-
-:: For LiteRT-LM v0.16.0
-:: :restore_build_file
-:: call :force_copy_file "%BUILD_FILE_BACKUP%" "%BUILD_FILE%"
-:: del /F /Q "%BUILD_FILE_BACKUP%"
-:: exit /b 0
-:: 
-:: :patch_capabilities
-:: copy /y "%BUILD_FILE%" "%BUILD_FILE_BACKUP%" || exit /b 1
-:: python "%BUILD_SCRIPTS_DIR%\patch_capabilities.py" "%BUILD_FILE%"
-:: exit /b %ERRORLEVEL%
 
 :copy_libs
 set "BUILT_SYMBOL=%~1"
@@ -100,8 +66,7 @@ if not exist "%WIN_LIBS_DST%" mkdir "%WIN_LIBS_DST%"
 
 bazelisk                                    ^
     --output_base="%BAZEL_OUT%"             ^
-    build                                   ^
-    //python/litert_lm:copy_dxcompiler_dll
+    build //python/litert_lm:copy_dxcompiler_dll
 
 if errorlevel 1 exit /b 1
 
@@ -109,8 +74,7 @@ call :force_copy_file "%WIN_LIBS_SRC%\dxcompiler.dll" "%WIN_LIBS_DST%\dxcompiler
 
 bazelisk                                    ^
     --output_base="%BAZEL_OUT%"             ^
-    build                                   ^
-    //python/litert_lm:copy_dxil_dll
+    build //python/litert_lm:copy_dxil_dll
 
 if errorlevel 1 exit /b 1
 
@@ -119,12 +83,6 @@ call :force_copy_file "%WIN_LIBS_SRC%\dxil.dll" "%WIN_LIBS_DST%\dxil.dll"
 exit /b 0
 
 :main
-
-:: call :patch_capabilities
-:: if errorlevel 1 (
-::     call :restore_build_file
-::     exit /b 1
-:: )
 
 :: ------------------------------ Windows ------------------------------
 
@@ -135,15 +93,11 @@ exit /b 0
 call :build windows                             ^
     "--define=litert_runtime_link_mode=dynamic"
 
-if errorlevel 1 (
-    :: call :restore_build_file
-    exit /b 1
-)
+if errorlevel 1 exit /b 1
 
 call :copy_libs "litert-lm" windows x86_64 dll Windows "%PREBUILT_LIBS_PC%"
 call :copy_windows_x64_libs
 
 echo LITERT_LM_REV = "%HEAD_COMMIT%" > "%PLUGIN_DIR%\.build_sources.windows_x64.txt"
 
-:: call :restore_build_file
 exit /b 0
