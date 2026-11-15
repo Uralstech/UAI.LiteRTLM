@@ -164,6 +164,12 @@ package_xcframeworks_ios() {
     create_xcframework_ios "${BUILT_SYMBOL}" "${build_dir}" "${archs}" full_name "${all_prebuilts}" || return 1
 }
 
+# ----------------- APPLY VERSION SPECIFIC PATCH(ES) ------------------
+
+LITERTLM_PATCH="../Patches/v0.19.1.patch"
+git apply "${LITERTLM_PATCH}"
+
+
 # Set ANDROID_NDK_HOME before running this
 # ------------------------------ Android ------------------------------
 
@@ -198,3 +204,5 @@ copy_ios_output sim_arm64 "${ios_out}"
 package_xcframeworks_ios "${ios_out}" "arm64 sim_arm64" || exit 1
 
 echo "LITERT_LM_REV = \"${HEAD_COMMIT}\"" > "${PLUGIN_DIR}/.build_sources.arm64.txt"
+
+git apply -R "${LITERTLM_PATCH}"

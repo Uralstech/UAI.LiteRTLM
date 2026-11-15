@@ -1,0 +1,24 @@
+diff --git a/runtime/components/BUILD b/runtime/components/BUILD
+index b680c6fc..d4f25f66 100644
+--- a/runtime/components/BUILD
++++ b/runtime/components/BUILD
+@@ -51,6 +51,11 @@ config_setting(
+     values = {"copt": "-DLITERT_USE_WEBGPU_ACCELERATOR"},
+ )
+ 
++config_setting(
++    name = "disable_static_gpu_samplers",
++    values = {"define": "disable_static_gpu_samplers=true"},
++)
++
+ alias(
+     name = "disable_sentencepiece_tokenizer",
+     actual = "//build_config:disable_sentencepiece_tokenizer",
+@@ -251,6 +256,7 @@ cc_library(
+ cc_library(
+     name = "default_static_gpu_samplers",
+     deps = select({
++        ":disable_static_gpu_samplers": [],
+         ":android_webgpu": [":top_k_webgpu_sampler_static"],
+         "@platforms//os:android": [":top_k_opencl_sampler_static"],
+         "//runtime/executor:ios_webgpu": [":top_k_webgpu_sampler_static"],
