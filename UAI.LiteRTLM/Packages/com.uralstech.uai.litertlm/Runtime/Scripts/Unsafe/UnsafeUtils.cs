@@ -21,12 +21,6 @@ namespace Uralstech.UAI.LiteRTLM.Unsafe
 {
     internal static class UnsafeUtils
     {
-        public static string? MarshalStringUTF8(IntPtr ptr) =>
-            Marshal.PtrToStringUTF8(ptr);
-
-        public static IntPtr MarshalDelegate<T>(T @delegate) where T : Delegate =>
-            Marshal.GetFunctionPointerForDelegate(@delegate);
-        
         /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
         public static PackageUnsafeUtils.TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
         {

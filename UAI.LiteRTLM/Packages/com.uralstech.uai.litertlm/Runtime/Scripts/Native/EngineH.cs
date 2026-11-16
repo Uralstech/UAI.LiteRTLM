@@ -83,30 +83,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
     /// </remarks>
     public static class EngineH
     {
+        public const int LiteRTLMTargetVersionMajor = 1;
+        public const int LiteRTLMTargetVersionMinor = 0;
+        public const int LiteRTLMTargetVersionPatch = 0;
+
         /// <summary>
         /// Returns the version of the library, which may differ from the
-        /// <c>LITERT_LM_C_API_VERSION_*</c> macros the caller was compiled against.
-        /// <para>
-        /// The two can differ whenever the library is loaded or replaced independently
-        /// of the application, for example when it is loaded at run time with
-        /// <c>dlopen</c>/<c>LoadLibrary</c>. Compare them before calling any other function:
-        /// </para>
-        /// <code>
-        /// StatusCode status = litert_lm_get_api_version(out int major, out int minor, out int patch);
-        /// if (status != StatusCode.Ok ||
-        ///     major != LITERT_LM_C_API_VERSION_MAJOR ||
-        ///     minor &lt; LITERT_LM_C_API_VERSION_MINOR)
-        /// {
-        ///     // Refuse to proceed: a different major version is ABI-incompatible, and
-        ///     // an older minor version may lack functions declared in these bindings.
-        /// }
-        /// </code>
-        /// <para>
-        /// The name and signature of this function will not change in any future
-        /// version, including major versions. Libraries older than version 1.0.0 do not
-        /// export it, so a caller that loads the library dynamically and cannot resolve
-        /// this symbol should treat the library as incompatible.
-        /// </para>
+        /// <c>LiteRTLMTargetVersion*</c> constants this package was written for.
         /// </summary>
         /// <param name="outMajor">
         /// On success, receives the major version of the library; not written on failure.
