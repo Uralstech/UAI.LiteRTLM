@@ -30,17 +30,18 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="litertlmPath">The path to the <c>.litertlm</c> file.</param>
         /// <param name="outLoadedFile">
         /// On success, receives the loaded file, owned by the caller; release with
-        /// <see cref="litert_lm_loaded_file_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="LoadedFileHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="litertlmPath"/> or
-        /// <paramref name="outLoadedFile"/> is <see langword="null"/>; otherwise the code of the
-        /// error that prevented the file from being loaded (e.g. the file could not be opened or parsed).
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="litertlmPath"/> is
+        /// <see langword="null"/>; otherwise the code of the error that prevented the file from
+        /// being loaded (e.g. the file could not be opened or parsed).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_create(
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string litertlmPath, out IntPtr outLoadedFile);
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string litertlmPath, out LoadedFileHandle outLoadedFile);
 
         /// <summary>
         /// Deletes a loaded LiteRT-LM file.
@@ -59,12 +60,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outSupported"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_has_speculative_decoding_support(
-            IntPtr loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outSupported);
+            LoadedFileHandle loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outSupported);
 
         /// <summary>
         /// Gets whether the model supports thinking / reasoning steps.
@@ -77,12 +77,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outSupported"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_supports_thinking(
-            IntPtr loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outSupported);
+            LoadedFileHandle loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outSupported);
 
         /// <summary>
         /// Gets whether the model supports function calling / tool use.
@@ -95,12 +94,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outSupported"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_supports_function_calling(
-            IntPtr loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outSupported);
+            LoadedFileHandle loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outSupported);
 
         /// <summary>
         /// Gets the default sampler type for the model.
@@ -112,14 +110,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outSamplerType"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model is not an LLM (it has no default sampler parameters).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_sampler_type(
-            IntPtr loadedFile,
-            out SamplerType outSamplerType);
+            LoadedFileHandle loadedFile, out SamplerType outSamplerType);
 
         /// <summary>
         /// Gets the default sampler temperature for the model.
@@ -131,13 +127,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outTemperature"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model is not an LLM (it has no default sampler parameters).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_sampler_temperature(
-            IntPtr loadedFile, out float outTemperature);
+            LoadedFileHandle loadedFile, out float outTemperature);
 
         /// <summary>
         /// Gets the default sampler <c>top_k</c> for the model.
@@ -149,13 +144,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outTopK"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model is not an LLM (it has no default sampler parameters).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_sampler_top_k(
-            IntPtr loadedFile, out int outTopK);
+            LoadedFileHandle loadedFile, out int outTopK);
 
         /// <summary>
         /// Gets the default sampler <c>top_p</c> for the model.
@@ -167,13 +161,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outTopP"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model is not an LLM (it has no default sampler parameters).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_sampler_top_p(
-            IntPtr loadedFile, out float outTopP);
+            LoadedFileHandle loadedFile, out float outTopP);
 
         /// <summary>
         /// Gets whether the input modality is supported.
@@ -186,13 +179,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/>, <paramref name="outSupported"/> is <see langword="null"/>,
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid
         /// or <paramref name="modality"/> is not a valid <see cref="Modality"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_supports_input_modality(
-            IntPtr loadedFile, Modality modality,
+            LoadedFileHandle loadedFile, Modality modality,
             [MarshalAs(UnmanagedType.I1)] out bool outSupported);
 
         /// <summary>
@@ -204,13 +196,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outBudget"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model does not support vision or does not define the budget.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_max_vision_token_budget(
-            IntPtr loadedFile, out int outBudget);
+            LoadedFileHandle loadedFile, out int outBudget);
 
         /// <summary>
         /// Gets the context size, in tokens, for the loaded LiteRT-LM file.
@@ -233,13 +224,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outMaxContextTokens"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model does not define its context size.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_max_context_tokens(
-            IntPtr loadedFile, out uint outMaxContextTokens);
+            LoadedFileHandle loadedFile, out uint outMaxContextTokens);
 
         /// <summary>
         /// Gets whether the model has dynamic context.
@@ -254,26 +244,25 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outIsDynamic"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_is_dynamic_context(
-            IntPtr loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outIsDynamic);
+            LoadedFileHandle loadedFile, [MarshalAs(UnmanagedType.I1)] out bool outIsDynamic);
 
         /// <summary>
         /// Gets the supported vision token lengths (the discrete vision token budgets
         /// supported by each vision signature).
         /// <para>
         /// Writes up to <paramref name="maxSize"/> lengths to <paramref name="lengths"/>. To query only
-        /// the count, pass <paramref name="lengths"/> = <see cref="IntPtr.Zero"/> (and
+        /// the count, pass <paramref name="lengths"/> = <see langword="null"/> (and
         /// <paramref name="maxSize"/> = 0).
         /// </para>
         /// </summary>
         /// <param name="loadedFile">The loaded file to inspect.</param>
         /// <param name="lengths">
         /// Buffer that receives up to <paramref name="maxSize"/> lengths on success, or
-        /// <see cref="IntPtr.Zero"/> to query only the count. Not written on failure.
+        /// <see langword="null"/> to query only the count. Not written on failure.
         /// </param>
         /// <param name="maxSize">The capacity of <paramref name="lengths"/>, in elements.</param>
         /// <param name="outCount">
@@ -282,22 +271,21 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outCount"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model does not support vision or does not define
         /// vision signature lengths.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_vision_signature_selection(
-            IntPtr loadedFile, IntPtr lengths, UIntPtr maxSize,
-            out UIntPtr outCount);
+            LoadedFileHandle loadedFile, [Out] int[]? lengths,
+            UIntPtr maxSize, out UIntPtr outCount);
 
         /// <summary>
         /// Gets the supported backends for a given modality, ordered by priority (first
         /// entry is the default/highest-priority backend).
         /// <para>
         /// Writes up to <paramref name="maxSize"/> backends to <paramref name="backends"/>. To query
-        /// only the count, pass <paramref name="backends"/> = <see cref="IntPtr.Zero"/> (and
+        /// only the count, pass <paramref name="backends"/> = <see langword="null"/> (and
         /// <paramref name="maxSize"/> = 0).
         /// </para>
         /// </summary>
@@ -305,7 +293,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="modality">The modality to query.</param>
         /// <param name="backends">
         /// Buffer that receives up to <paramref name="maxSize"/> backends on success, or
-        /// <see cref="IntPtr.Zero"/> to query only the count. Not written on failure.
+        /// <see langword="null"/> to query only the count. Not written on failure.
         /// </param>
         /// <param name="maxSize">The capacity of <paramref name="backends"/>, in elements.</param>
         /// <param name="outCount">
@@ -315,13 +303,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success (including an unsupported modality), or another
         /// <see cref="StatusCode"/> on failure. <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="loadedFile"/> is <see cref="IntPtr.Zero"/>, <paramref name="outCount"/>
-        /// is <see langword="null"/>, or <paramref name="modality"/> is not a valid <see cref="Modality"/>.
+        /// <paramref name="loadedFile"/> is invalid or <paramref name="modality"/> is not a valid
+        /// <see cref="Modality"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_modality_supported_backends(
-            IntPtr loadedFile, Modality modality,
-            IntPtr backends, UIntPtr maxSize, out UIntPtr outCount);
+            LoadedFileHandle loadedFile, Modality modality, [Out] BackendType[]? backends,
+            UIntPtr maxSize, out UIntPtr outCount);
 
         /// <summary>
         /// Gets the detected NPU brand of the model for a given modality.
@@ -335,14 +323,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/>, <paramref name="outNpuBrand"/> is <see langword="null"/>, or
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid or
         /// <paramref name="modality"/> is not a valid <see cref="Modality"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_modality_npu_brand(
-            IntPtr loadedFile, Modality modality,
-            out NpuBrand outNpuBrand);
+            LoadedFileHandle loadedFile, Modality modality, out NpuBrand outNpuBrand);
 
         /// <summary>
         /// Gets the target SoC name for a given modality (e.g. "SM8750", "Tensor_G5").
@@ -358,13 +344,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success (including when no SoC name is specified), or another
         /// <see cref="StatusCode"/> on failure. <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="loadedFile"/> is <see cref="IntPtr.Zero"/>, <paramref name="outSocName"/>
-        /// is <see langword="null"/>, or <paramref name="modality"/> is not a valid <see cref="Modality"/>.
+        /// <paramref name="loadedFile"/> is invalid or <paramref name="modality"/> is not a valid
+        /// <see cref="Modality"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_modality_soc_name(
-            IntPtr loadedFile, Modality modality,
-            out IntPtr outSocName);
+            LoadedFileHandle loadedFile, Modality modality, out IntPtr outSocName);
 
         /// <summary>
         /// Gets the minimum LiteRT-LM runtime version required to run this model.
@@ -379,12 +364,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success (including when no version requirement is defined), or
         /// another <see cref="StatusCode"/> on failure. <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="loadedFile"/> is <see cref="IntPtr.Zero"/> or <paramref name="outVersion"/>
-        /// is <see langword="null"/>.
+        /// <paramref name="loadedFile"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_min_runtime_version(
-            IntPtr loadedFile, out IntPtr outVersion);
+            LoadedFileHandle loadedFile, out IntPtr outVersion);
 
         /// <summary>
         /// Gets the model type of the loaded LiteRT-LM file.
@@ -396,12 +380,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outModelType"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_model_type(
-            IntPtr loadedFile, out ModelType outModelType);
+            LoadedFileHandle loadedFile, out ModelType outModelType);
 
         /// <summary>
         /// Gets the output embedding dimension for the model.
@@ -412,27 +395,26 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outDimension"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model is not an embedding model or does not define
         /// the dimension.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_embedding_dimension(
-            IntPtr loadedFile, out int outDimension);
+            LoadedFileHandle loadedFile, out int outDimension);
 
         /// <summary>
         /// Gets the supported embedding signature sequence lengths.
         /// <para>
         /// Writes up to <paramref name="maxSize"/> lengths to <paramref name="lengths"/>. To query only
-        /// the count, pass <paramref name="lengths"/> = <see cref="IntPtr.Zero"/> (and
+        /// the count, pass <paramref name="lengths"/> = <see langword="null"/> (and
         /// <paramref name="maxSize"/> = 0).
         /// </para>
         /// </summary>
         /// <param name="loadedFile">The loaded file to inspect.</param>
         /// <param name="lengths">
         /// Buffer that receives up to <paramref name="maxSize"/> lengths on success, or
-        /// <see cref="IntPtr.Zero"/> to query only the count. Not written on failure.
+        /// <see langword="null"/> to query only the count. Not written on failure.
         /// </param>
         /// <param name="maxSize">The capacity of <paramref name="lengths"/>, in elements.</param>
         /// <param name="outCount">
@@ -441,14 +423,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outCount"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="loadedFile"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the model is not an embedding model or does not define
         /// signature lengths.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_loaded_file_embedding_signature_selection(
-            IntPtr loadedFile, IntPtr lengths, UIntPtr maxSize,
-            out UIntPtr outCount);
+            LoadedFileHandle loadedFile, [Out] int[]? lengths,
+            UIntPtr maxSize, out UIntPtr outCount);
     }
 }

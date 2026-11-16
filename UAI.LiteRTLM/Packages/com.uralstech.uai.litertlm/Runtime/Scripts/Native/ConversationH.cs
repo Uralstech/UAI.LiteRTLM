@@ -29,15 +29,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="outConfig">
         /// On success, receives the created config, owned by the caller; release with
-        /// <see cref="litert_lm_conversation_config_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="ConversationConfigHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="outConfig"/> is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_create(
-            out IntPtr outConfig);
+            out ConversationConfigHandle outConfig);
 
         /// <summary>
         /// Sets the session config for this conversation config.
@@ -46,11 +46,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="sessionConfig">The session config to use.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> or <paramref name="sessionConfig"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> or <paramref name="sessionConfig"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_session_config(
-            IntPtr config, IntPtr sessionConfig);
+            ConversationConfigHandle config, SessionConfigHandle sessionConfig);
 
         /// <summary>
         /// Sets the system message for this conversation config.
@@ -59,12 +59,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="systemMessageJson">The system message in JSON format.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/> or <paramref name="systemMessageJson"/>
+        /// <paramref name="config"/> is invalid or <paramref name="systemMessageJson"/>
         /// is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_system_message(
-            IntPtr config, [MarshalAs(UnmanagedType.LPUTF8Str)] string systemMessageJson);
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.LPUTF8Str)] string systemMessageJson);
 
         /// <summary>
         /// Sets the tools for this conversation config.
@@ -73,12 +73,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="toolsJson">The tools description in JSON array format.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/> or <paramref name="toolsJson"/>
+        /// <paramref name="config"/> is invalid or <paramref name="toolsJson"/>
         /// is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_tools(
-            IntPtr config, [MarshalAs(UnmanagedType.LPUTF8Str)] string toolsJson);
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.LPUTF8Str)] string toolsJson);
 
         /// <summary>
         /// Sets the initial messages for this conversation config.
@@ -87,12 +87,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="messagesJson">The initial messages in JSON array format.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/> or <paramref name="messagesJson"/>
+        /// <paramref name="config"/> is invalid or <paramref name="messagesJson"/>
         /// is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_messages(
-            IntPtr config, [MarshalAs(UnmanagedType.LPUTF8Str)] string messagesJson);
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.LPUTF8Str)] string messagesJson);
 
         /// <summary>
         /// Sets the extra context for the conversation preface.
@@ -101,12 +101,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="extraContextJson">A JSON string representing the extra context object.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/> or <paramref name="extraContextJson"/>
+        /// <paramref name="config"/> is invalid or <paramref name="extraContextJson"/>
         /// is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_extra_context(
-            IntPtr config, [MarshalAs(UnmanagedType.LPUTF8Str)] string extraContextJson);
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.LPUTF8Str)] string extraContextJson);
 
         /// <summary>
         /// Sets the prompt template for this conversation config.
@@ -118,12 +118,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/> or <paramref name="promptTemplate"/>
+        /// <paramref name="config"/> is invalid or <paramref name="promptTemplate"/>
         /// is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_prompt_template(
-            IntPtr config, [MarshalAs(UnmanagedType.LPUTF8Str)] string promptTemplate);
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.LPUTF8Str)] string promptTemplate);
 
         /// <summary>
         /// Sets whether to enable constrained decoding for this conversation config.
@@ -132,12 +132,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="enableConstrainedDecoding">Whether to enable constrained decoding.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_conversation_config_set_enable_constrained_decoding(
-                IntPtr config, [MarshalAs(UnmanagedType.I1)] bool enableConstrainedDecoding);
+        public static extern StatusCode litert_lm_conversation_config_set_enable_constrained_decoding(
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.I1)] bool enableConstrainedDecoding);
 
         /// <summary>
         /// Sets the constraint provider type for this conversation config.
@@ -148,13 +147,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/> or <paramref name="providerType"/> is not
+        /// <paramref name="config"/> is invalid or <paramref name="providerType"/> is not
         /// a declared <see cref="ConstraintProviderType"/> value.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_constraint_provider(
-            IntPtr config,
-            ConstraintProviderType providerType);
+            ConversationConfigHandle config, ConstraintProviderType providerType);
 
         /// <summary>
         /// Sets whether to filter channel content from the KV cache.
@@ -163,13 +161,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="filterChannelContentFromKvCache">Whether to filter channel content.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_conversation_config_set_filter_channel_content_from_kv_cache(
-                IntPtr config,
-                [MarshalAs(UnmanagedType.I1)] bool filterChannelContentFromKvCache);
+        public static extern StatusCode litert_lm_conversation_config_set_filter_channel_content_from_kv_cache(
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.I1)] bool filterChannelContentFromKvCache);
 
         /// <summary>
         /// Sets whether to stream tool call tokens.
@@ -179,11 +175,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="channelName">The channel name to use for tool call tokens.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_stream_tool_calls(
-            IntPtr config, [MarshalAs(UnmanagedType.I1)] bool streamToolCalls,
+            ConversationConfigHandle config, [MarshalAs(UnmanagedType.I1)] bool streamToolCalls,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string? channelName);
 
         /// <summary>
@@ -191,15 +187,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="outConfig">
         /// On success, receives the created config, owned by the caller; release with
-        /// <see cref="litert_lm_thinking_config_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="ThinkingConfigHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="outConfig"/> is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_thinking_config_create(
-            out IntPtr outConfig);
+            out ThinkingConfigHandle outConfig);
 
         /// <summary>
         /// Destroys a LiteRT LM Thinking Config.
@@ -215,11 +211,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="enableThinking">Whether thinking is enabled.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_thinking_config_set_enable_thinking(
-            IntPtr config, [MarshalAs(UnmanagedType.I1)] bool enableThinking);
+            ThinkingConfigHandle config, [MarshalAs(UnmanagedType.I1)] bool enableThinking);
 
         /// <summary>
         /// Sets the thinking token budget.
@@ -230,27 +226,27 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_thinking_config_set_thinking_token_budget(
-            IntPtr config, int thinkingTokenBudget);
+            ThinkingConfigHandle config, int thinkingTokenBudget);
 
         /// <summary>
         /// Sets the thinking config for this conversation config.
         /// </summary>
         /// <param name="config">The config to modify.</param>
         /// <param name="thinkingConfig">
-        /// The thinking config to set. If <see cref="IntPtr.Zero"/>, clears any previously set thinking config.
+        /// The thinking config to set. If <see cref="ThinkingConfigHandle.Null"/> (or invalid),
+        /// clears any previously set thinking config.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="config"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="config"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_config_set_thinking_config(
-            IntPtr config,
-            IntPtr thinkingConfig);
+            ConversationConfigHandle config, ThinkingConfigHandle thinkingConfig);
 
         /// <summary>
         /// Destroys a LiteRT LM Conversation Config.
@@ -264,15 +260,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="outOptionalArgs">
         /// On success, receives the created optional args, owned by the caller; release with
-        /// <see cref="litert_lm_conversation_optional_args_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="ConversationOptionalArgsHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="outOptionalArgs"/> is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_optional_args_create(
-            out IntPtr outOptionalArgs);
+            out ConversationOptionalArgsHandle outOptionalArgs);
 
         /// <summary>
         /// Destroys a LiteRT LM Conversation Optional Args.
@@ -293,19 +289,18 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="optionalArgs">The optional arguments structure (<c>OptionalArgs</c>) to modify.</param>
         /// <param name="repetitionPenaltyConfig">
-        /// The repetition penalty configuration struct (<c>LiteRtLmRepetitionPenaltyConfig</c>) created via
-        /// <c>litert_lm_repetition_penalty_config_create</c>. The contents are deep-copied when set.
-        /// If <see cref="IntPtr.Zero"/>, clears any previously set repetition penalty config so no penalties apply.
+        /// The repetition penalty configuration created via
+        /// <see cref="EngineH.litert_lm_repetition_penalty_config_create"/>. The contents are deep-copied when set.
+        /// If <see cref="RepetitionPenaltyConfigHandle.Null"/> (or invalid), clears any previously set
+        /// repetition penalty config so no penalties apply.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="optionalArgs"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_conversation_optional_args_set_repetition_penalty_config(
-                IntPtr optionalArgs,
-                IntPtr repetitionPenaltyConfig);
+        public static extern StatusCode litert_lm_conversation_optional_args_set_repetition_penalty_config(
+            ConversationOptionalArgsHandle optionalArgs, RepetitionPenaltyConfigHandle repetitionPenaltyConfig);
 
         /// <summary>
         /// Sets the no repeat ngram configuration for the per-turn conversation
@@ -318,20 +313,18 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="optionalArgs">The optional arguments structure (<c>OptionalArgs</c>) to modify.</param>
         /// <param name="noRepeatNgramConfig">
-        /// The no repeat ngram configuration struct (<c>LiteRtLmNoRepeatNgramConfig</c>) created via
-        /// <c>litert_lm_no_repeat_ngram_config_create</c>. The contents are deep-copied when set.
-        /// If <see cref="IntPtr.Zero"/>, clears any previously set no repeat ngram config so no
-        /// repeat ngram banning applies.
+        /// The no repeat ngram configuration created via
+        /// <see cref="EngineH.litert_lm_no_repeat_ngram_config_create"/>. The contents are deep-copied when set.
+        /// If <see cref="NoRepeatNgramConfigHandle.Null"/> (or invalid), clears any previously set no repeat
+        /// ngram config so no repeat ngram banning applies.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="optionalArgs"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_conversation_optional_args_set_no_repeat_ngram_config(
-                IntPtr optionalArgs,
-                IntPtr noRepeatNgramConfig);
+        public static extern StatusCode litert_lm_conversation_optional_args_set_no_repeat_ngram_config(
+            ConversationOptionalArgsHandle optionalArgs, NoRepeatNgramConfigHandle noRepeatNgramConfig);
 
         /// <summary>
         /// Sets the suppress tokens configuration for the per-turn conversation
@@ -343,20 +336,18 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="optionalArgs">The optional arguments structure (<c>OptionalArgs</c>) to modify.</param>
         /// <param name="suppressTokensConfig">
-        /// The suppress tokens configuration struct (<c>LiteRtLmSuppressTokensConfig</c>) created via
-        /// <c>litert_lm_suppress_tokens_config_create</c>. The contents are deep-copied when set.
-        /// If <see cref="IntPtr.Zero"/> or if the inner token set is disabled/empty, clears any
-        /// previously set suppress tokens config so no token suppression applies.
+        /// The suppress tokens configuration created via
+        /// <see cref="EngineH.litert_lm_suppress_tokens_config_create"/>. The contents are deep-copied when set.
+        /// If <see cref="SuppressTokensConfigHandle.Null"/> (or invalid) or if the inner token set is
+        /// disabled/empty, clears any previously set suppress tokens config so no token suppression applies.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="optionalArgs"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_conversation_optional_args_set_suppress_tokens_config(
-                IntPtr optionalArgs,
-                IntPtr suppressTokensConfig);
+        public static extern StatusCode litert_lm_conversation_optional_args_set_suppress_tokens_config(
+            ConversationOptionalArgsHandle optionalArgs, SuppressTokensConfigHandle suppressTokensConfig);
 
         /// <summary>
         /// Sets the visual token budget for the conversation optional args.
@@ -365,11 +356,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="visualTokenBudget">The visual token budget.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="optionalArgs"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_optional_args_set_visual_token_budget(
-            IntPtr optionalArgs, int visualTokenBudget);
+            ConversationOptionalArgsHandle optionalArgs, int visualTokenBudget);
 
         /// <summary>
         /// Sets the maximum number of output tokens for the conversation optional args.
@@ -382,27 +373,27 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="optionalArgs"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_optional_args_set_max_output_tokens(
-            IntPtr optionalArgs, int maxOutputTokens);
+            ConversationOptionalArgsHandle optionalArgs, int maxOutputTokens);
 
         /// <summary>
         /// Sets the thinking config for the conversation optional args.
         /// </summary>
         /// <param name="optionalArgs">The optional args to modify.</param>
         /// <param name="thinkingConfig">
-        /// The thinking config to set. If <see cref="IntPtr.Zero"/>, clears any previously set thinking config.
+        /// The thinking config to set. If <see cref="ThinkingConfigHandle.Null"/> (or invalid),
+        /// clears any previously set thinking config.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="optionalArgs"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_optional_args_set_thinking_config(
-            IntPtr optionalArgs,
-            IntPtr thinkingConfig);
+            ConversationOptionalArgsHandle optionalArgs, ThinkingConfigHandle thinkingConfig);
 
         /// <summary>
         /// Sets the constraint for the conversation optional args.
@@ -412,35 +403,36 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="constraintString">The constraint pattern/schema/grammar string.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="optionalArgs"/> is <see cref="IntPtr.Zero"/> or <paramref name="constraintType"/>
+        /// <paramref name="optionalArgs"/> is invalid or <paramref name="constraintType"/>
         /// is not a declared <see cref="ConstraintType"/> value.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_optional_args_set_constraint(
-            IntPtr optionalArgs,
-            ConstraintType constraintType, [MarshalAs(UnmanagedType.LPUTF8Str)] string? constraintString);
+            ConversationOptionalArgsHandle optionalArgs, ConstraintType constraintType,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string? constraintString);
 
         /// <summary>
         /// Creates a LiteRT LM Conversation.
         /// </summary>
         /// <param name="engine">The engine to create the conversation from.</param>
         /// <param name="config">
-        /// The conversation config to use. If <see cref="IntPtr.Zero"/>, the default config will be used.
+        /// The conversation config to use. If <see cref="ConversationConfigHandle.Null"/> (or invalid),
+        /// the default config will be used.
         /// </param>
         /// <param name="outConversation">
         /// On success, receives the created conversation, owned by the caller; release with
-        /// <see cref="litert_lm_conversation_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="ConversationHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is <see cref="IntPtr.Zero"/>
-        /// or <paramref name="outConversation"/> is <see langword="null"/>; otherwise the code of the error
-        /// that prevented the conversation from being created.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is invalid;
+        /// otherwise the code of the error that prevented the conversation from being created.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_create(
-            IntPtr engine, IntPtr config,
-            out IntPtr outConversation);
+            EngineHandle engine, ConversationConfigHandle config,
+            out ConversationHandle outConversation);
 
         /// <summary>
         /// Destroys a LiteRT LM Conversation.
@@ -455,18 +447,17 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="conversation">The conversation to clone.</param>
         /// <param name="outConversation">
         /// On success, receives the cloned conversation, owned by the caller; release with
-        /// <see cref="litert_lm_conversation_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="ConversationHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outConversation"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid;
         /// otherwise the code of the error that prevented the clone.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_clone(
-            IntPtr conversation,
-            out IntPtr outConversation);
+            ConversationHandle conversation, out ConversationHandle outConversation);
 
         /// <summary>
         /// Sends a message to the conversation and returns the response.
@@ -475,24 +466,25 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="conversation">The conversation to use.</param>
         /// <param name="messageJson">A JSON string representing the message to send.</param>
         /// <param name="extraContext">A JSON string representing the extra context to use.</param>
-        /// <param name="optionalArgs">A pointer to the optional arguments to use.</param>
+        /// <param name="optionalArgs">
+        /// The optional arguments to use, or <see cref="ConversationOptionalArgsHandle.Null"/>.
+        /// </param>
         /// <param name="outResponse">
         /// On success, receives the JSON response, owned by the caller; release with
-        /// <see cref="litert_lm_json_response_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="JsonResponseHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/>, <paramref name="messageJson"/> or <paramref name="outResponse"/>
-        /// is <see langword="null"/>, or <paramref name="messageJson"/> is not valid JSON; otherwise
-        /// the code of the generation error.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid,
+        /// <paramref name="messageJson"/> is <see langword="null"/>, or
+        /// <paramref name="messageJson"/> is not valid JSON; otherwise the code of the generation error.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_send_message(
-            IntPtr conversation, [MarshalAs(UnmanagedType.LPUTF8Str)] string messageJson,
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string? extraContext,
-            IntPtr optionalArgs,
-            out IntPtr outResponse);
+            ConversationHandle conversation, [MarshalAs(UnmanagedType.LPUTF8Str)] string messageJson,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string? extraContext, ConversationOptionalArgsHandle optionalArgs,
+            out JsonResponseHandle outResponse);
 
         /// <summary>
         /// Destroys a LiteRT LM JSON Response object.
@@ -512,12 +504,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="response"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outJson"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="response"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_json_response_get_string(
-            IntPtr response, out IntPtr outJson);
+            JsonResponseHandle response, out IntPtr outJson);
 
         /// <summary>
         /// Sends a message to the conversation and streams the response via a callback.
@@ -527,23 +518,24 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="conversation">The conversation to use.</param>
         /// <param name="messageJson">A JSON string representing the message to send.</param>
         /// <param name="extraContext">A JSON string representing the extra context to use.</param>
-        /// <param name="optionalArgs">A pointer to the optional arguments to use.</param>
-        /// <param name="callback">The callback function to receive response chunks.</param>
+        /// <param name="optionalArgs">
+        /// The optional arguments to use, or <see cref="ConversationOptionalArgsHandle.Null"/>.
+        /// </param>
+        /// <param name="callback">The callback function pointer to receive response chunks.</param>
         /// <param name="callbackData">A pointer to user data that will be passed to the callback.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/>, <paramref name="messageJson"/> or <paramref name="callback"/> is
-        /// <see langword="null"/>, or <paramref name="messageJson"/> is not valid JSON; otherwise the code
-        /// of the error that prevented the stream from starting. Errors that occur after the stream
-        /// has started are reported through the callback.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid,
+        /// <paramref name="messageJson"/> is <see langword="null"/>, <paramref name="callback"/> is
+        /// <see cref="IntPtr.Zero"/>, or <paramref name="messageJson"/> is not valid JSON; otherwise
+        /// the code of the error that prevented the stream from starting. Errors that occur after
+        /// the stream has started are reported through the callback.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_send_message_stream(
-            IntPtr conversation, [MarshalAs(UnmanagedType.LPUTF8Str)] string messageJson,
-            [MarshalAs(UnmanagedType.LPUTF8Str)] string? extraContext,
-            IntPtr optionalArgs,
-            EngineH.StreamCallback callback, IntPtr callbackData);
+            ConversationHandle conversation, [MarshalAs(UnmanagedType.LPUTF8Str)] string messageJson,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string? extraContext, ConversationOptionalArgsHandle optionalArgs,
+            IntPtr /*EngineH.StreamCallback*/ callback, IntPtr callbackData);
 
         /// <summary>
         /// Renders the message into a string according to the template.
@@ -568,14 +560,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/>, <paramref name="messageJson"/> or <paramref name="outText"/> is
-        /// <see langword="null"/>, or <paramref name="messageJson"/> is not valid JSON; otherwise the
-        /// code of the rendering error.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid,
+        /// <paramref name="messageJson"/> is <see langword="null"/>, or
+        /// <paramref name="messageJson"/> is not valid JSON; otherwise the code of the rendering error.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_render_message_to_string(
-            IntPtr conversation, [MarshalAs(UnmanagedType.LPUTF8Str)] string messageJson,
+            ConversationHandle conversation, [MarshalAs(UnmanagedType.LPUTF8Str)] string messageJson,
             out IntPtr outText);
 
         /// <summary>
@@ -594,13 +585,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outText"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid;
         /// otherwise the code of the rendering error.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_render_preface_to_string(
-            IntPtr conversation, out IntPtr outText);
+            ConversationHandle conversation, out IntPtr outText);
 
         /// <summary>
         /// Cancels the ongoing inference process, for asynchronous inference.
@@ -614,11 +604,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="conversation">The conversation to cancel the inference for.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="conversation"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="conversation"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_cancel_process(
-            IntPtr conversation);
+            ConversationHandle conversation);
 
         /// <summary>
         /// Triggers execution of, and waits for, all pending tasks in the conversation
@@ -626,8 +616,8 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <para>
         /// This must be called after <see cref="litert_lm_conversation_send_message_stream"/> when
         /// the engine was created with single threaded execution enabled (see
-        /// <c>litert_lm_engine_settings_set_single_threaded_execution</c>): in that mode the
-        /// queued work only makes progress while a caller drives it, so the streaming
+        /// <see cref="EngineH.litert_lm_engine_settings_set_single_threaded_execution"/>): in that
+        /// mode the queued work only makes progress while a caller drives it, so the streaming
         /// callback is invoked from within this call.
         /// </para>
         /// </summary>
@@ -637,7 +627,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_wait_until_done(
-            IntPtr conversation);
+            ConversationHandle conversation);
 
         /// <summary>
         /// Retrieves the benchmark information from the conversation.
@@ -645,18 +635,17 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="conversation">The conversation to get the benchmark info from.</param>
         /// <param name="outBenchmarkInfo">
         /// On success, receives the benchmark info, owned by the caller; release with
-        /// <c>litert_lm_benchmark_info_delete</c>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="BenchmarkInfoHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outBenchmarkInfo"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid;
         /// otherwise the code of the runtime error (e.g. if benchmarking is not enabled).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_get_benchmark_info(
-            IntPtr conversation,
-            out IntPtr outBenchmarkInfo);
+            ConversationHandle conversation, out BenchmarkInfoHandle outBenchmarkInfo);
 
         /// <summary>
         /// Gets the number of tokens in the conversation KV Cache (prefill + decode).
@@ -667,12 +656,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outCount"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid;
         /// otherwise the code of the runtime error.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_conversation_get_token_count(
-            IntPtr conversation, out UIntPtr outCount);
+            ConversationHandle conversation, out UIntPtr outCount);
     }
 }

@@ -33,14 +33,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="audioBackendStr">The audio backend to use, or <see langword="null"/> if not set.</param>
         /// <param name="outSettings">
         /// On success, receives the created settings, owned by the caller; release with
-        /// <see cref="litert_lm_embedding_engine_settings_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="EmbeddingEngineSettingsHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="modelPath"/>, <paramref name="backendStr"/>,
-        /// or <paramref name="outSettings"/> is <see langword="null"/>, or a backend string is not recognized;
-        /// otherwise the code of the error that prevented the settings from being created (e.g. the model file
-        /// could not be opened).
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="modelPath"/> or
+        /// <paramref name="backendStr"/> is <see langword="null"/>, or a backend string is not
+        /// recognized; otherwise the code of the error that prevented the settings from being
+        /// created (e.g. the model file could not be opened).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_create(
@@ -48,7 +49,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
             [MarshalAs(UnmanagedType.LPUTF8Str)] string backendStr,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string? visionBackendStr,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string? audioBackendStr,
-            out IntPtr outSettings);
+            out EmbeddingEngineSettingsHandle outSettings);
 
         /// <summary>
         /// Destroys LiteRT LM Embedding Engine Settings.
@@ -65,12 +66,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="numThreads">The number of threads.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/>. If <paramref name="numThreads"/> is
+        /// <paramref name="settings"/> is invalid. If <paramref name="numThreads"/> is
         /// not positive, this call has no effect and returns <see cref="StatusCode.Ok"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_set_num_threads(
-            IntPtr settings, int numThreads);
+            EmbeddingEngineSettingsHandle settings, int numThreads);
 
         /// <summary>
         /// Sets the number of threads for the audio CPU backend in Embedding Engine Settings.
@@ -79,13 +80,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="numThreads">The number of threads.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/>. If <paramref name="numThreads"/> is
+        /// <paramref name="settings"/> is invalid. If <paramref name="numThreads"/> is
         /// not positive or no audio backend is configured, this call has no effect and returns
         /// <see cref="StatusCode.Ok"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_set_audio_num_threads(
-            IntPtr settings, int numThreads);
+            EmbeddingEngineSettingsHandle settings, int numThreads);
 
         /// <summary>
         /// Sets the cache directory for the Embedding Engine.
@@ -94,12 +95,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="cacheDir">The cache directory.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/> or <paramref name="cacheDir"/> is
+        /// <paramref name="settings"/> is invalid or <paramref name="cacheDir"/> is
         /// <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_set_cache_dir(
-            IntPtr settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string cacheDir);
+            EmbeddingEngineSettingsHandle settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string cacheDir);
 
         /// <summary>
         /// Sets the LiteRT dispatch library directory for the main NPU backend.
@@ -108,13 +109,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="libDir">The dispatch library directory.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/> or <paramref name="libDir"/> is
+        /// <paramref name="settings"/> is invalid or <paramref name="libDir"/> is
         /// <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_embedding_engine_settings_set_litert_dispatch_lib_dir(
-                IntPtr settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
+        public static extern StatusCode litert_lm_embedding_engine_settings_set_litert_dispatch_lib_dir(
+            EmbeddingEngineSettingsHandle settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
 
         /// <summary>
         /// Sets the LiteRT dispatch library directory for the vision NPU backend.
@@ -123,14 +123,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="libDir">The dispatch library directory.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/> or <paramref name="libDir"/> is
+        /// <paramref name="settings"/> is invalid or <paramref name="libDir"/> is
         /// <see langword="null"/>. If no vision backend is configured, this call has no effect and
         /// returns <see cref="StatusCode.Ok"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_embedding_engine_settings_set_vision_litert_dispatch_lib_dir(
-                IntPtr settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
+        public static extern StatusCode litert_lm_embedding_engine_settings_set_vision_litert_dispatch_lib_dir(
+            EmbeddingEngineSettingsHandle settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
 
         /// <summary>
         /// Sets the LiteRT dispatch library directory for the audio NPU backend.
@@ -139,14 +138,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="libDir">The dispatch library directory.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/> or <paramref name="libDir"/> is
+        /// <paramref name="settings"/> is invalid or <paramref name="libDir"/> is
         /// <see langword="null"/>. If no audio backend is configured, this call has no effect and
         /// returns <see cref="StatusCode.Ok"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_embedding_engine_settings_set_audio_litert_dispatch_lib_dir(
-                IntPtr settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
+        public static extern StatusCode litert_lm_embedding_engine_settings_set_audio_litert_dispatch_lib_dir(
+            EmbeddingEngineSettingsHandle settings, [MarshalAs(UnmanagedType.LPUTF8Str)] string libDir);
 
         /// <summary>
         /// Sets the maximum sequence length (in tokens) for text encoder signatures in
@@ -158,11 +156,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="settings"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_set_max_input_length(
-            IntPtr settings, int maxInputLength);
+            EmbeddingEngineSettingsHandle settings, int maxInputLength);
 
         /// <summary>
         /// Sets the minimum sequence length (in tokens) for text encoder signatures in
@@ -174,11 +172,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="settings"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_set_min_input_length(
-            IntPtr settings, int minInputLength);
+            EmbeddingEngineSettingsHandle settings, int minInputLength);
 
         /// <summary>
         /// Sets the desired number of vision tokens generated per image in Embedding
@@ -190,12 +188,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="settings"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_embedding_engine_settings_set_vision_tokens_per_image(
-                IntPtr settings, int visionTokensPerImage);
+        public static extern StatusCode litert_lm_embedding_engine_settings_set_vision_tokens_per_image(
+            EmbeddingEngineSettingsHandle settings, int visionTokensPerImage);
 
         /// <summary>
         /// Sets the activation data type for the embedding engine settings.
@@ -204,13 +201,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="activationDataType">The activation data type (FLOAT32, FLOAT16, etc.).</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="settings"/> is <see cref="IntPtr.Zero"/> or <paramref name="activationDataType"/>
+        /// <paramref name="settings"/> is invalid or <paramref name="activationDataType"/>
         /// is not a declared <see cref="ActivationDataType"/> value.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_settings_set_activation_data_type(
-            IntPtr settings,
-            ActivationDataType activationDataType);
+            EmbeddingEngineSettingsHandle settings, ActivationDataType activationDataType);
 
         /// <summary>
         /// Creates LiteRT LM Embedding Options with default values (<c>normalize = true</c>,
@@ -218,15 +214,15 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </summary>
         /// <param name="outOptions">
         /// On success, receives the created options, owned by the caller; release with
-        /// <see cref="litert_lm_embedding_options_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="EmbeddingOptionsHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="outOptions"/> is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_create(
-            out IntPtr outOptions);
+            out EmbeddingOptionsHandle outOptions);
 
         /// <summary>
         /// Destroys LiteRT LM Embedding Options.
@@ -242,11 +238,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="normalize">Whether to normalize.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="options"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_set_normalize(
-            IntPtr options, [MarshalAs(UnmanagedType.I1)] bool normalize);
+            EmbeddingOptionsHandle options, [MarshalAs(UnmanagedType.I1)] bool normalize);
 
         /// <summary>
         /// Gets whether the embedding should be L2 normalized.
@@ -258,12 +254,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outNormalize"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_get_normalize(
-            IntPtr options, [MarshalAs(UnmanagedType.I1)] out bool outNormalize);
+            EmbeddingOptionsHandle options, [MarshalAs(UnmanagedType.I1)] out bool outNormalize);
 
         /// <summary>
         /// Sets whether special tokens (BOS, EOS, start/end of image, start/end of audio)
@@ -273,11 +268,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="insertSpecialTokens">Whether to insert special tokens.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="options"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_set_insert_special_tokens(
-            IntPtr options, [MarshalAs(UnmanagedType.I1)] bool insertSpecialTokens);
+            EmbeddingOptionsHandle options, [MarshalAs(UnmanagedType.I1)] bool insertSpecialTokens);
 
         /// <summary>
         /// Gets whether special tokens should be automatically inserted.
@@ -289,12 +284,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outInsertSpecialTokens"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_get_insert_special_tokens(
-            IntPtr options, [MarshalAs(UnmanagedType.I1)] out bool outInsertSpecialTokens);
+            EmbeddingOptionsHandle options, [MarshalAs(UnmanagedType.I1)] out bool outInsertSpecialTokens);
 
         /// <summary>
         /// Sets the input overflow strategy.
@@ -303,12 +297,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="strategy">The overflow strategy to use.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="options"/> is <see cref="IntPtr.Zero"/> or <paramref name="strategy"/> is
+        /// <paramref name="options"/> is invalid or <paramref name="strategy"/> is
         /// not a declared <see cref="InputOverflowStrategy"/> value.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_set_input_overflow_strategy(
-            IntPtr options, InputOverflowStrategy strategy);
+            EmbeddingOptionsHandle options, InputOverflowStrategy strategy);
 
         /// <summary>
         /// Gets the input overflow strategy.
@@ -320,13 +314,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outStrategy"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_get_input_overflow_strategy(
-            IntPtr options,
-            out InputOverflowStrategy outStrategy);
+            EmbeddingOptionsHandle options, out InputOverflowStrategy outStrategy);
 
         /// <summary>
         /// Sets the output embedding size to truncate the embedding to.
@@ -338,11 +330,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="options"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_set_output_size(
-            IntPtr options, int outputSize);
+            EmbeddingOptionsHandle options, int outputSize);
 
         /// <summary>
         /// Gets the output embedding size.
@@ -353,13 +345,12 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outOutputSize"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the output size is not set (the default output embedding size is used).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_get_output_size(
-            IntPtr options, out int outOutputSize);
+            EmbeddingOptionsHandle options, out int outOutputSize);
 
         /// <summary>
         /// Sets the vision tokens per image.
@@ -370,11 +361,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="options"/> is <see cref="IntPtr.Zero"/>.
+        /// <paramref name="options"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_set_vision_tokens_per_image(
-            IntPtr options, int visionTokensPerImage);
+            EmbeddingOptionsHandle options, int visionTokensPerImage);
 
         /// <summary>
         /// Gets the vision tokens per image.
@@ -386,14 +377,13 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outVisionTokensPerImage"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="options"/> is invalid;
         /// <see cref="StatusCode.NotFound"/> if the vision tokens per image is not set (the engine or model
         /// default is used).
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_options_get_vision_tokens_per_image(
-            IntPtr options, out int outVisionTokensPerImage);
+            EmbeddingOptionsHandle options, out int outVisionTokensPerImage);
 
         /// <summary>
         /// Destroys a LiteRT LM Embedding Response.
@@ -411,12 +401,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="response"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outSize"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="response"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_response_get_size(
-            IntPtr response, out UIntPtr outSize);
+            EmbeddingResponseHandle response, out UIntPtr outSize);
 
         /// <summary>
         /// Gets a pointer to the array of float embedding values.
@@ -426,18 +415,17 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// On success, receives a pointer to the <see cref="litert_lm_embedding_response_get_size"/>
         /// float values, or <see cref="IntPtr.Zero"/> if the embedding is empty. The array is owned by
         /// <paramref name="response"/> and valid until <paramref name="response"/> (or the
-        /// <c>LiteRtLmEmbeddingResponses</c> that owns it) is deleted. Set to <see cref="IntPtr.Zero"/>
+        /// <see cref="EmbeddingResponsesHandle"/> that owns it) is deleted. Set to <see cref="IntPtr.Zero"/>
         /// on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success (including an empty embedding), or another
         /// <see cref="StatusCode"/> on failure. <see cref="StatusCode.InvalidArgument"/> if
-        /// <paramref name="response"/> is <see cref="IntPtr.Zero"/> or <paramref name="outValues"/>
-        /// is <see langword="null"/>.
+        /// <paramref name="response"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_response_get_values(
-            IntPtr response, out IntPtr outValues);
+            EmbeddingResponseHandle response, out IntPtr outValues);
 
         /// <summary>
         /// Destroys a collection of LiteRT LM Embedding Responses.
@@ -456,12 +444,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="responses"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outSize"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="responses"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_responses_get_size(
-            IntPtr responses, out UIntPtr outSize);
+            EmbeddingResponsesHandle responses, out UIntPtr outSize);
 
         /// <summary>
         /// Gets the embedding response at the given index in the batch.
@@ -471,18 +458,18 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="outResponse">
         /// On success, receives the embedding response at <paramref name="index"/>. It is owned by
         /// <paramref name="responses"/> and valid until <paramref name="responses"/> is deleted; do not
-        /// delete it. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// pass its raw pointer to <see cref="litert_lm_embedding_response_delete"/>. Set to an invalid
+        /// handle (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="responses"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outResponse"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="responses"/> is invalid;
         /// <see cref="StatusCode.OutOfRange"/> if <paramref name="index"/> is not less than the batch size.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_responses_get_at(
-            IntPtr responses, UIntPtr index,
-            out IntPtr outResponse);
+            EmbeddingResponsesHandle responses, UIntPtr index,
+            out BorrowedEmbeddingResponseHandle outResponse);
 
         /// <summary>
         /// Creates a LiteRT LM Embedding Engine from the given settings.
@@ -490,18 +477,17 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="settings">The embedding engine settings.</param>
         /// <param name="outEngine">
         /// On success, receives the created engine, owned by the caller; release with
-        /// <see cref="litert_lm_embedding_engine_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="EmbeddingEngineHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="settings"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outEngine"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="settings"/> is invalid;
         /// otherwise the code of the error that prevented the engine from being created.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_create(
-            IntPtr settings,
-            out IntPtr outEngine);
+            EmbeddingEngineSettingsHandle settings, out EmbeddingEngineHandle outEngine);
 
         /// <summary>
         /// Destroys a LiteRT LM Embedding Engine.
@@ -519,52 +505,54 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <param name="numInputs">Number of inputs in the array.</param>
         /// <param name="options">
-        /// Optional embedding options. If <see cref="IntPtr.Zero"/>, default options are used.
+        /// Optional embedding options. If <see cref="EmbeddingOptionsHandle.Null"/> (or invalid),
+        /// default options are used.
         /// </param>
         /// <param name="outResponse">
         /// On success, receives the embedding response, owned by the caller; release with
-        /// <see cref="litert_lm_embedding_response_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="EmbeddingResponseHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outResponse"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is invalid;
         /// otherwise the code of the error that prevented the embedding from being computed.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_compute_embedding(
-            IntPtr engine, IntPtr[] inputs,
-            UIntPtr numInputs, IntPtr options,
-            out IntPtr outResponse);
+            EmbeddingEngineHandle engine, IntPtr[] inputs, // GC.KeepAlive the InputDataHandle[]
+            UIntPtr numInputs, EmbeddingOptionsHandle options,
+            out EmbeddingResponseHandle outResponse);
 
         /// <summary>
         /// Computes embedding responses for a batch of requests.
         /// </summary>
         /// <param name="engine">The embedding engine.</param>
-        /// <param name="inputsBatch">An array of arrays of <c>LiteRtLmInputData</c> pointers.</param>
+        /// <param name="inputsBatch">
+        /// An array of pinned pointers to arrays of <c>LiteRtLmInputData</c> pointers.
+        /// </param>
         /// <param name="numInputsPerBatch">
         /// An array specifying the number of inputs for each request in the batch.
         /// </param>
         /// <param name="batchSize">The number of requests in the batch.</param>
         /// <param name="options">
-        /// Optional embedding options. If <see cref="IntPtr.Zero"/>, default options are used.
+        /// Optional embedding options. If <see cref="EmbeddingOptionsHandle.Null"/> (or invalid),
+        /// default options are used.
         /// </param>
         /// <param name="outResponses">
         /// On success, receives the batch responses, owned by the caller; release with
-        /// <see cref="litert_lm_embedding_responses_delete"/>. Set to <see cref="IntPtr.Zero"/> on failure.
+        /// <see cref="EmbeddingResponsesHandle.Dispose"/>. Set to an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outResponses"/> is <see langword="null"/>;
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is invalid;
         /// otherwise the code of the error that prevented the embeddings from being computed.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_embedding_engine_compute_embedding_batch(
-            IntPtr engine,
-            IntPtr[] inputsBatch,
-            UIntPtr[] numInputsPerBatch, UIntPtr batchSize,
-            IntPtr options,
-            out IntPtr outResponses);
+            EmbeddingEngineHandle engine, IntPtr[] inputsBatch, // Pin inner IntPtr[]s and GC.KeepAlive the InputDataHandle[][]
+            UIntPtr[] numInputsPerBatch, UIntPtr batchSize, EmbeddingOptionsHandle options,
+            out EmbeddingResponsesHandle outResponses);
     }
 }

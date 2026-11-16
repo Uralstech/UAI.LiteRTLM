@@ -33,7 +33,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// Updates whether to enable Metal residency set on GPU for the given engine at runtime.
         /// <para>
         /// To configure this setting during initialization, use
-        /// <c>litert_lm_engine_settings_set_gpu_enable_metal_residency_set</c> instead.
+        /// <see cref="EngineH.litert_lm_engine_settings_set_gpu_enable_metal_residency_set"/> instead.
         /// </para>
         /// <para>
         /// When enabled on Apple platforms (macOS and iOS with Metal GPU backend), this
@@ -51,12 +51,11 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <param name="enableMetalResidencySet">Whether to enable Metal residency set.</param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is <see cref="IntPtr.Zero"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="engine"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
-        public static extern StatusCode
-            litert_lm_experimental_engine_update_gpu_enable_metal_residency_set(
-                IntPtr engine, [MarshalAs(UnmanagedType.I1)] bool enableMetalResidencySet);
+        public static extern StatusCode litert_lm_experimental_engine_update_gpu_enable_metal_residency_set(
+            EngineHandle engine, [MarshalAs(UnmanagedType.I1)] bool enableMetalResidencySet);
 
         /// <summary>
         /// Checks whether the LiteRT-LM runtime binary was built with the debugger
@@ -68,57 +67,53 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="outEnabled"/> is <see langword="null"/>.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_experimental_is_debugger_enabled(
             [MarshalAs(UnmanagedType.I1)] out bool outEnabled);
 
         /// <summary>
-        /// Gets debug info for the session. The caller is responsible for deleting the
-        /// returned object using <see cref="litert_lm_experimental_session_debug_info_delete"/>.
+        /// Gets debug info for the session. The caller is responsible for releasing the
+        /// returned handle using <see cref="SessionDebugInfoHandle.Dispose"/>.
         /// <para>
         /// If debugging is unsupported or disabled for the session, this succeeds and
-        /// <paramref name="outDebugInfo"/> is set to <see cref="IntPtr.Zero"/>.
+        /// <paramref name="outDebugInfo"/> is set to an invalid handle (<see cref="LiteRTHandle.IsInvalid"/>).
         /// </para>
         /// </summary>
         /// <param name="session">The session to query.</param>
         /// <param name="outDebugInfo">
-        /// On success, receives the session debug info, or <see cref="IntPtr.Zero"/> if debugging
-        /// is unsupported or disabled; set to <see cref="IntPtr.Zero"/> on failure.
+        /// On success, receives the session debug info, or an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) if debugging is unsupported or disabled or on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="session"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outDebugInfo"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="session"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_experimental_session_get_debug_info(
-            IntPtr session, out IntPtr outDebugInfo);
+            SessionHandle session, out SessionDebugInfoHandle outDebugInfo);
 
         /// <summary>
         /// Gets session debug info for the conversation's underlying session. The caller is
-        /// responsible for deleting the returned object using
-        /// <see cref="litert_lm_experimental_session_debug_info_delete"/>.
+        /// responsible for releasing the returned handle using
+        /// <see cref="SessionDebugInfoHandle.Dispose"/>.
         /// <para>
         /// If debugging is unsupported or disabled for the session, this succeeds and
-        /// <paramref name="outDebugInfo"/> is set to <see cref="IntPtr.Zero"/>.
+        /// <paramref name="outDebugInfo"/> is set to an invalid handle (<see cref="LiteRTHandle.IsInvalid"/>).
         /// </para>
         /// </summary>
         /// <param name="conversation">The conversation to query.</param>
         /// <param name="outDebugInfo">
-        /// On success, receives the session debug info, or <see cref="IntPtr.Zero"/> if debugging
-        /// is unsupported or disabled; set to <see cref="IntPtr.Zero"/> on failure.
+        /// On success, receives the session debug info, or an invalid handle
+        /// (<see cref="LiteRTHandle.IsInvalid"/>) if debugging is unsupported or disabled or on failure.
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outDebugInfo"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="conversation"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_experimental_conversation_get_session_debug_info(
-            IntPtr conversation,
-            out IntPtr outDebugInfo);
+            ConversationHandle conversation, out SessionDebugInfoHandle outDebugInfo);
 
         /// <summary>
         /// Destroys a <c>LiteRtLmSessionDebugInfo</c> object.
@@ -141,11 +136,10 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// </param>
         /// <returns>
         /// <see cref="StatusCode.Ok"/> on success, or another <see cref="StatusCode"/> on failure.
-        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="debugInfo"/> is
-        /// <see cref="IntPtr.Zero"/> or <paramref name="outCaptureDir"/> is <see langword="null"/>.
+        /// <see cref="StatusCode.InvalidArgument"/> if <paramref name="debugInfo"/> is invalid.
         /// </returns>
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_lm_experimental_session_debug_info_get_capture_dir(
-            IntPtr debugInfo, out IntPtr outCaptureDir);
+            SessionDebugInfoHandle debugInfo, out IntPtr outCaptureDir);
     }
 }
