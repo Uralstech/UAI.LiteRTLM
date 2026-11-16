@@ -24,8 +24,48 @@ namespace Uralstech.UAI.LiteRTLM.Native
         /// <summary>Does this refer to a valid LiteRT-LM object?</summary>
         public override bool IsInvalid => handle == IntPtr.Zero;
 
+        /// <summary>The native owner of this handle's object.</summary>
+        public LiteRTHandle? OwnerHandle { get; private set; }
+
         protected LiteRTHandle(IntPtr handle, bool ownsHandle) : base(handle, ownsHandle) { }
         protected LiteRTHandle(bool ownsHandle) : this(IntPtr.Zero, ownsHandle) { }
+        
+        protected void DangerousAttachOwner(LiteRTHandle ownerHandle)
+        {
+            if (ownerHandle is null)
+                throw new ArgumentNullException(nameof(ownerHandle));
+
+            if (OwnerHandle is not null)
+                throw new InvalidOperationException("Cannot attach a new owner to handle.");
+            
+            if (ownerHandle.IsInvalid || ownerHandle.IsClosed)
+                throw new ArgumentException("Tried to attach invalid/closed owner to handle.");
+
+            if (IsInvalid || IsClosed)
+                throw new InvalidOperationException("Tried to attach owner to invalid/closed handle.");
+            
+            bool success = false;
+            ownerHandle.DangerousAddRef(ref success);
+            if (!success)
+                throw new InvalidOperationException("Could not increment reference to owner handle.");
+            
+            OwnerHandle = ownerHandle;
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            try
+            {
+                return ReleaseLiteRTHandle();
+            }
+            finally
+            {
+                OwnerHandle?.DangerousRelease();
+                OwnerHandle = null;
+            }
+        }
+
+        protected abstract bool ReleaseLiteRTHandle();
     }
 
     #region EngineH
@@ -37,7 +77,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private SamplerParamsHandle(bool ownsHandle) : base(ownsHandle) { }
         public SamplerParamsHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_sampler_params_delete(handle);
             return true;
@@ -51,7 +91,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private SessionConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public SessionConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_session_config_delete(handle);
             return true;
@@ -65,7 +105,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private SpeculativeDecodingConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public SpeculativeDecodingConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_speculative_decoding_config_delete(handle);
             return true;
@@ -79,7 +119,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private RepetitionPenaltyConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public RepetitionPenaltyConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_repetition_penalty_config_delete(handle);
             return true;
@@ -93,7 +133,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private NoRepeatNgramConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public NoRepeatNgramConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_no_repeat_ngram_config_delete(handle);
             return true;
@@ -107,7 +147,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private SuppressTokensConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public SuppressTokensConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_suppress_tokens_config_delete(handle);
             return true;
@@ -121,7 +161,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private InputDataHandle(bool ownsHandle) : base(ownsHandle) { }
         public InputDataHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_input_data_delete(handle);
             return true;
@@ -135,7 +175,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private EngineSettingsHandle(bool ownsHandle) : base(ownsHandle) { }
         public EngineSettingsHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_engine_settings_delete(handle);
             return true;
@@ -149,7 +189,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private EngineHandle(bool ownsHandle) : base(ownsHandle) { }
         public EngineHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_engine_delete(handle);
             return true;
@@ -159,37 +199,28 @@ namespace Uralstech.UAI.LiteRTLM.Native
     public sealed class SessionHandle : LiteRTHandle
     {
         public static SessionHandle Null => new(ownsHandle: false);
-        
-        /// <summary>The engine this session was created from.</summary>
-        public EngineHandle? EngineHandle { get; private set; }
+
+        /// <summary>The engine which owns this session.</summary>
+        public new EngineHandle? OwnerHandle => (EngineHandle?)base.OwnerHandle;
         
         private SessionHandle(bool ownsHandle) : base(ownsHandle) { }
         public SessionHandle() : this(ownsHandle: true) { }
 
-        /// <summary>Call ONCE right after the session is created.</summary>
-        public void AttachParent(EngineHandle parentHandle)
-        {
-            if (EngineHandle is not null)
-                throw new InvalidOperationException("Cannot attach a new parent to handle.");
-            
-            if (parentHandle.IsInvalid)
-                throw new ArgumentException("Tried to attach invalid parent to handle.");
-
-            if (IsInvalid)
-                throw new InvalidOperationException("Tried to attach parent to invalid handle.");
-            
-            bool success = false;
-            parentHandle.DangerousAddRef(ref success);
-            if (!success)
-                throw new InvalidOperationException("Could not increment reference to parent handle.");
-            
-            EngineHandle = parentHandle;
-        }
-
-        protected override bool ReleaseHandle()
+        /// <summary>
+        /// Attaches the parent <see cref="EngineHandle"/> to this session so the engine cannot
+        /// be destroyed before this session is released.
+        /// </summary>
+        /// <remarks>
+        /// Call ONCE immediately after <see cref="EngineH.litert_lm_engine_create_session"/> or
+        /// <see cref="EngineH.litert_lm_session_clone"/> succeeds.
+        /// </remarks>
+        /// <param name="ownerHandle">The engine handle that owns this session.</param>
+        public void DangerousAttachOwner(EngineHandle ownerHandle) =>
+            base.DangerousAttachOwner(ownerHandle);
+        
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_session_delete(handle);
-            EngineHandle?.DangerousRelease();
             return true;
         }
     }
@@ -201,7 +232,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private ResponsesHandle(bool ownsHandle) : base(ownsHandle) { }
         public ResponsesHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_responses_delete(handle);
             return true;
@@ -215,7 +246,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private BenchmarkInfoHandle(bool ownsHandle) : base(ownsHandle) { }
         public BenchmarkInfoHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_benchmark_info_delete(handle);
             return true;
@@ -227,8 +258,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         public static StreamChunkHandle Null => new(handle: IntPtr.Zero);
         
         public StreamChunkHandle(IntPtr handle) : base(handle, ownsHandle: false) { }
-        
-        protected override bool ReleaseHandle() => false;
+        protected override bool ReleaseLiteRTHandle() => false;
     }
 
     public sealed class TokenizeResultHandle : LiteRTHandle
@@ -238,7 +268,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private TokenizeResultHandle(bool ownsHandle) : base(ownsHandle) { }
         public TokenizeResultHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_tokenize_result_delete(handle);
             return true;
@@ -252,7 +282,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private DetokenizeResultHandle(bool ownsHandle) : base(ownsHandle) { }
         public DetokenizeResultHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_detokenize_result_delete(handle);
             return true;
@@ -266,7 +296,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         protected TokenUnionHandle(bool ownsHandle) : base(ownsHandle) { }
         public TokenUnionHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_token_union_delete(handle);
             return true;
@@ -277,37 +307,24 @@ namespace Uralstech.UAI.LiteRTLM.Native
     {
         public static new BorrowedTokenUnionHandle Null => new(ownsHandle: false);
 
-        /// <summary>The token unions this union was borrowed from.</summary>
-        public TokenUnionsHandle? TokenUnionsHandle { get; private set; }
+        /// <summary>The TokenUnions which owns this union.</summary>
+        public new TokenUnionsHandle? OwnerHandle => (TokenUnionsHandle?)base.OwnerHandle;
 
         private BorrowedTokenUnionHandle(bool ownsHandle) : base(ownsHandle) { }
         public BorrowedTokenUnionHandle() : this(ownsHandle: true) { }
+        
+        /// <summary>
+        /// Attaches the owning <see cref="TokenUnionsHandle"/> collection so it cannot be destroyed
+        /// while this borrowed token union is still in use.
+        /// </summary>
+        /// <remarks>
+        /// Call ONCE immediately after <see cref="EngineH.litert_lm_token_unions_get_token_at"/> succeeds.
+        /// </remarks>
+        /// <param name="ownerHandle">The collection handle that owns this token union.</param>
+        public void DangerousAttachOwner(TokenUnionsHandle ownerHandle) =>
+            base.DangerousAttachOwner(ownerHandle);
 
-        /// <summary>Call ONCE right after the union is created.</summary>
-        public void AttachParent(TokenUnionsHandle parentHandle)
-        {
-            if (TokenUnionsHandle is not null)
-                throw new InvalidOperationException("Cannot attach a new parent to handle.");
-            
-            if (parentHandle.IsInvalid)
-                throw new ArgumentException("Tried to attach invalid parent to handle.");
-
-            if (IsInvalid)
-                throw new InvalidOperationException("Tried to attach parent to invalid handle.");
-            
-            bool success = false;
-            parentHandle.DangerousAddRef(ref success);
-            if (!success)
-                throw new InvalidOperationException("Could not increment reference to parent handle.");
-            
-            TokenUnionsHandle = parentHandle;
-        }
-
-        protected override bool ReleaseHandle()
-        {
-            TokenUnionsHandle?.DangerousRelease();
-            return true;
-        }
+        protected override bool ReleaseLiteRTHandle() => true;
     }
     
     public sealed class TokenUnionsHandle : LiteRTHandle
@@ -317,7 +334,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private TokenUnionsHandle(bool ownsHandle) : base(ownsHandle) { }
         public TokenUnionsHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EngineH.litert_lm_token_unions_delete(handle);
             return true;
@@ -335,7 +352,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private ConversationConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public ConversationConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ConversationH.litert_lm_conversation_config_delete(handle);
             return true;
@@ -349,7 +366,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private ThinkingConfigHandle(bool ownsHandle) : base(ownsHandle) { }
         public ThinkingConfigHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ConversationH.litert_lm_thinking_config_delete(handle);
             return true;
@@ -363,7 +380,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private ConversationOptionalArgsHandle(bool ownsHandle) : base(ownsHandle) { }
         public ConversationOptionalArgsHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ConversationH.litert_lm_conversation_optional_args_delete(handle);
             return true;
@@ -373,37 +390,28 @@ namespace Uralstech.UAI.LiteRTLM.Native
     public sealed class ConversationHandle : LiteRTHandle
     {
         public static ConversationHandle Null => new(ownsHandle: false);
-        
-        /// <summary>The engine this conversation was created from.</summary>
-        public EngineHandle? EngineHandle { get; private set; }
+
+        /// <summary>The engine which owns this conversation.</summary>
+        public new EngineHandle? OwnerHandle => (EngineHandle?)base.OwnerHandle;
         
         private ConversationHandle(bool ownsHandle) : base(ownsHandle) { }
         public ConversationHandle() : this(ownsHandle: true) { }
+        
+        /// <summary>
+        /// Attaches the parent <see cref="EngineHandle"/> to this conversation so the engine cannot
+        /// be destroyed before this conversation is released.
+        /// </summary>
+        /// <remarks>
+        /// Call ONCE immediately after <see cref="ConversationH.litert_lm_conversation_create"/> or
+        /// <see cref="ConversationH.litert_lm_conversation_clone"/> succeeds.
+        /// </remarks>
+        /// <param name="ownerHandle">The engine handle that owns this conversation.</param>
+        public void DangerousAttachOwner(EngineHandle ownerHandle) =>
+            base.DangerousAttachOwner(ownerHandle);
 
-        /// <summary>Call ONCE right after the conversation is created.</summary>
-        public void AttachParent(EngineHandle parentHandle)
-        {
-            if (EngineHandle is not null)
-                throw new InvalidOperationException("Cannot attach a new parent to handle.");
-            
-            if (parentHandle.IsInvalid)
-                throw new ArgumentException("Tried to attach invalid parent to handle.");
-
-            if (IsInvalid)
-                throw new InvalidOperationException("Tried to attach parent to invalid handle.");
-            
-            bool success = false;
-            parentHandle.DangerousAddRef(ref success);
-            if (!success)
-                throw new InvalidOperationException("Could not increment reference to parent handle.");
-            
-            EngineHandle = parentHandle;
-        }
-
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ConversationH.litert_lm_conversation_delete(handle);
-            EngineHandle?.DangerousRelease();
             return true;
         }
     }
@@ -415,7 +423,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private JsonResponseHandle(bool ownsHandle) : base(ownsHandle) { }
         public JsonResponseHandle() : this(ownsHandle: true) { }
 
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ConversationH.litert_lm_json_response_delete(handle);
             return true;
@@ -433,7 +441,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private EmbeddingEngineSettingsHandle(bool ownsHandle) : base(ownsHandle) { }
         public EmbeddingEngineSettingsHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EmbeddingEngineH.litert_lm_embedding_engine_settings_delete(handle);
             return true;
@@ -447,7 +455,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private EmbeddingOptionsHandle(bool ownsHandle) : base(ownsHandle) { }
         public EmbeddingOptionsHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EmbeddingEngineH.litert_lm_embedding_options_delete(handle);
             return true;
@@ -461,7 +469,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         protected EmbeddingResponseHandle(bool ownsHandle) : base(ownsHandle) { }
         public EmbeddingResponseHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EmbeddingEngineH.litert_lm_embedding_response_delete(handle);
             return true;
@@ -472,37 +480,24 @@ namespace Uralstech.UAI.LiteRTLM.Native
     {
         public static new BorrowedEmbeddingResponseHandle Null => new(ownsHandle: false);
 
-        /// <summary>The embedding responses this response was borrowed from.</summary>
-        public EmbeddingResponsesHandle? EmbeddingResponsesHandle { get; private set; }
+        /// <summary>The EmbeddingResponsesHandle which owns this response.</summary>
+        public new EmbeddingResponsesHandle? OwnerHandle => (EmbeddingResponsesHandle?)base.OwnerHandle;
 
         private BorrowedEmbeddingResponseHandle(bool ownsHandle) : base(ownsHandle) { }
         public BorrowedEmbeddingResponseHandle() : this(ownsHandle: true) { }
 
-        /// <summary>Call ONCE right after the response is created.</summary>
-        public void AttachParent(EmbeddingResponsesHandle parentHandle)
-        {
-            if (EmbeddingResponsesHandle is not null)
-                throw new InvalidOperationException("Cannot attach a new parent to handle.");
-            
-            if (parentHandle.IsInvalid)
-                throw new ArgumentException("Tried to attach invalid parent to handle.");
-
-            if (IsInvalid)
-                throw new InvalidOperationException("Tried to attach parent to invalid handle.");
-            
-            bool success = false;
-            parentHandle.DangerousAddRef(ref success);
-            if (!success)
-                throw new InvalidOperationException("Could not increment reference to parent handle.");
-            
-            EmbeddingResponsesHandle = parentHandle;
-        }
-
-        protected override bool ReleaseHandle()
-        {
-            EmbeddingResponsesHandle?.DangerousRelease();
-            return true;
-        }
+        /// <summary>
+        /// Attaches the owning <see cref="EmbeddingResponsesHandle"/> collection so it cannot be
+        /// destroyed while this borrowed response is still in use.
+        /// </summary>
+        /// <remarks>
+        /// Call ONCE immediately after <see cref="EmbeddingEngineH.litert_lm_embedding_responses_get_at"/> succeeds.
+        /// </remarks>
+        /// <param name="ownerHandle">The collection handle that owns this embedding response.</param>
+        public void DangerousAttachOwner(EmbeddingResponsesHandle ownerHandle) =>
+            base.DangerousAttachOwner(ownerHandle);
+        
+        protected override bool ReleaseLiteRTHandle() => true;
     }
     
     public sealed class EmbeddingResponsesHandle : LiteRTHandle
@@ -512,7 +507,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private EmbeddingResponsesHandle(bool ownsHandle) : base(ownsHandle) { }
         public EmbeddingResponsesHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EmbeddingEngineH.litert_lm_embedding_responses_delete(handle);
             return true;
@@ -526,7 +521,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private EmbeddingEngineHandle(bool ownsHandle) : base(ownsHandle) { }
         public EmbeddingEngineHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             EmbeddingEngineH.litert_lm_embedding_engine_delete(handle);
             return true;
@@ -544,7 +539,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private LoadedFileHandle(bool ownsHandle) : base(ownsHandle) { }
         public LoadedFileHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ModelInfoH.litert_lm_loaded_file_delete(handle);
             return true;
@@ -562,7 +557,7 @@ namespace Uralstech.UAI.LiteRTLM.Native
         private SessionDebugInfoHandle(bool ownsHandle) : base(ownsHandle) { }
         public SessionDebugInfoHandle() : this(ownsHandle: true) { }
         
-        protected override bool ReleaseHandle()
+        protected override bool ReleaseLiteRTHandle()
         {
             ExperimentalH.litert_lm_experimental_session_debug_info_delete(handle);
             return true;
