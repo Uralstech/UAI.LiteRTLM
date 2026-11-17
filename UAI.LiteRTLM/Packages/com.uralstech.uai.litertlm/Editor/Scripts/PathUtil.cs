@@ -18,7 +18,7 @@ using UnityEditor.PackageManager;
 using UnityEngine;
 
 #nullable enable
-namespace Uralstech.UShare.Editor
+namespace Uralstech.UAI.LiteRTLM.Editor
 {
     internal static class PathUtils
     {

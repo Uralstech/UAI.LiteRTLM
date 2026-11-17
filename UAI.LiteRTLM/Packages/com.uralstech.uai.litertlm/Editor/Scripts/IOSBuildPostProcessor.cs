@@ -21,7 +21,6 @@ using UnityEditor.Build.Reporting;
 using UnityEditor.iOS.Xcode;
 using UnityEditor.iOS.Xcode.Extensions;
 using UnityEngine;
-using Uralstech.UShare.Editor;
 
 #nullable enable
 namespace Uralstech.UAI.LiteRTLM.Editor
