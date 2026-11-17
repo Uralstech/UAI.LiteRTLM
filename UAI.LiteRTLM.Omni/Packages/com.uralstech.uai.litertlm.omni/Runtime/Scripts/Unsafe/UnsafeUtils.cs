@@ -1,0 +1,45 @@
+// Copyright 2026 URAV ADVANCED LEARNING SYSTEMS PRIVATE LIMITED
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Text;
+
+#nullable enable
+namespace Uralstech.UAI.LiteRTLM.Omni.Unsafe
+{
+    internal static class UnsafeUtils
+    {
+        /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
+        public static PackageUnsafeUtils.TempMem AllocateStringUTF8(ReadOnlySpan<char> str)
+        {
+            int count = Encoding.UTF8.GetByteCount(str);
+            
+            PackageUnsafeUtils.TempMem mem = PackageUnsafeUtils.Allocate(count, out Span<byte> span);
+            Encoding.UTF8.GetBytes(str, span[..count]);
+            return mem;
+        }
+        
+        /// <remarks>Allocates memory for SHORT-TERM usage.</remarks>
+        public static PackageUnsafeUtils.TempMem AllocateNullTerminatedStringUTF8(ReadOnlySpan<char> str)
+        {
+            int count = Encoding.UTF8.GetByteCount(str);
+            
+            PackageUnsafeUtils.TempMem mem = PackageUnsafeUtils.Allocate(count + 1, out Span<byte> span);
+            Encoding.UTF8.GetBytes(str, span[..count]);
+            span[count] = 0;
+            
+            return mem;
+        }
+    }
+}

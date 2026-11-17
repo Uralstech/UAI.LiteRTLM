@@ -45,7 +45,7 @@ copy_libs() {
     local src="${PREBUILTS_DIR}/${platform}_${arch}"
     local dst="${PLUGIN_DIR}/${plugin_subdir}/${arch}"
 
-    mkdir -p "$dst"
+    mkdir -p "${dst}"
     for lib in ${PREBUILT_LIBS_COMMON} ${platform_libs}; do
 
         force_copy_file                     \
