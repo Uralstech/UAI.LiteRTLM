@@ -21,7 +21,7 @@ using Uralstech.UAI.LiteRTLM.Native;
 #nullable enable
 namespace Uralstech.UAI.LiteRTLM
 {
-    public delegate void StreamCallback();
+    public delegate void StreamCallback(StreamChunk chunk);
     
     /// <summary>Exception thrown when a LiteRT LM native operation fails.</summary>
     public sealed class LiteRTLMException : Exception
@@ -105,16 +105,16 @@ namespace Uralstech.UAI.LiteRTLM
 #endif
         private static void GlobalStreamCallbackListener(IntPtr key, IntPtr chunk)
         {
-            StreamChunkHandle? managedChunk = null;
+            StreamChunk? managedChunk = null;
             bool isFinal = false;
             
             try
             {
-                managedChunk = new StreamChunkHandle(chunk);
-                //isFinal = managedChunk.IsFinal();
+                managedChunk = new StreamChunk(new StreamChunkHandle(chunk));
+                isFinal = managedChunk.IsFinal();
 
                 if (s_callbacks.TryGetValue(key, out StreamCallback? callback))
-                    ; //callback?.Invoke(managedChunk);
+                    callback?.Invoke(managedChunk);
             }
             catch (Exception ex)
             {

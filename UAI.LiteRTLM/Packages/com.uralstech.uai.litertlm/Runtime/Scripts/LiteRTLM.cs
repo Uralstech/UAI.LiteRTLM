@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using Uralstech.UAI.LiteRTLM.Native;
 
 #nullable enable
@@ -63,83 +62,6 @@ namespace Uralstech.UAI.LiteRTLM
             LiteRTLMException.Check(EngineH.litert_lm_get_api_version(
                 out int major, out int minor, out int patch));
             return new Version(major, minor, patch);
-        }
-    }
-
-    /// <summary>A base class for anything that strictly owns a <see cref="LiteRTHandle"/>.</summary>
-    /// <typeparam name="T"></typeparam>
-    public abstract class LiteRTLMWrapper<T> : IDisposable
-        where T : LiteRTHandle
-    {
-        private T? _handle;
-        private readonly object _lock = new();
-
-        /// <summary>ALWAYS call during construction.</summary>
-        protected void SetHandle(T handle)
-        {
-            lock (_lock)
-            {
-                if (_handle != null)
-                    throw new InvalidOperationException($"A handle for {GetType().Name} is already set.");
-            
-                _handle = handle;
-            }
-        }
-        
-        /// <summary>Gets the native handle.</summary>
-        /// <remarks>
-        /// don't use this unless you <i><b>really</b></i> know what you're doing.
-        /// even then, you really don't need to use this. probably.
-        /// </remarks>
-        public T DangerousGetHandle()
-        {
-            ThrowIfInvalid(out T handle);
-            return handle;
-        }
-
-        protected void LockedExecute(Func<T, StatusCode> action)
-        {
-            lock (_lock)
-            {
-                ThrowIfInvalid(out T handle);
-                LiteRTLMException.Check(action(handle));
-            }
-        }
-        
-        protected TReturn LockedExecute<TReturn>(Func<T, (StatusCode, TReturn)> action)
-        {
-            lock (_lock)
-            {
-                ThrowIfInvalid(out T handle);
-                (StatusCode code, TReturn result) = action(handle);
-                return LiteRTLMException.Check(code, result);
-            }
-        }
-        
-        private void ThrowIfInvalid(out T handle)
-        {
-            if (_handle is null || _handle.IsInvalid || _handle.IsClosed)
-                throw new ObjectDisposedException(GetType().Name);
-            handle = _handle;
-        }
-        
-        public void Dispose()
-        {
-            lock (_lock)
-            {
-                _handle?.Dispose();
-                _handle = null;
-            }
-            
-            GC.SuppressFinalize(this);
-        }
-
-        ~LiteRTLMWrapper()
-        {
-            if (_handle is { IsInvalid: false, IsClosed: false })
-                PackageLogger.LogWarning($"An instance of {GetType().Name} was garbage collected. " +
-                                         $"Undisposed LiteRT-LM objects can use up significant system resources, " +
-                                         $"dispose them as soon as you're done using them.");
         }
     }
 }
