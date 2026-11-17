@@ -35,7 +35,7 @@ namespace Uralstech.UAI.LiteRTLM.Editor
             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
                 return true;
             
-            Debug.LogError("Could not resolve the path to the UShare package.");
+            Debug.LogError("Could not resolve the path to the UAI.LiteRTLM package.");
             return false;
         }
     }
