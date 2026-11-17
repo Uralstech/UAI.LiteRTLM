@@ -874,7 +874,7 @@ namespace Uralstech.UAI.LiteRTLM
             LockedExecute(handle => (EngineH.litert_lm_benchmark_info_get_time_to_first_token(handle, out double seconds), seconds));
 
         /// <summary>Returns the total initialization time in seconds.</summary>
-        public double GetTotalInitTimeInSeconds() =>
+        public double GetTotalInitTime() =>
             LockedExecute(handle => (EngineH.litert_lm_benchmark_info_get_total_init_time_in_second(handle, out double seconds), seconds));
 
         /// <summary>Returns all prefill turns.</summary>
@@ -1056,7 +1056,7 @@ namespace Uralstech.UAI.LiteRTLM
         public int Count => LockedExecute(handle =>
             (EngineH.litert_lm_token_unions_get_num_tokens(handle, out UIntPtr count), (int)count));
 
-        /// <summary>Returns a borrowed <see cref="TokenUnion"/> view at the given index.</summary>
+        /// <summary>Returns a borrowed <see cref="TokenUnion"/> view at the given index, must be disposed after use.</summary>
         /// <param name="index">The element index.</param>
         public TokenUnion At(int index)
         {

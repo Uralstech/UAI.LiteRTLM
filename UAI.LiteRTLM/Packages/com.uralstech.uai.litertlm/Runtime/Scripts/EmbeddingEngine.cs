@@ -209,7 +209,7 @@ namespace Uralstech.UAI.LiteRTLM
         public int Count => LockedExecute(handle =>
             (EmbeddingEngineH.litert_lm_embedding_responses_get_size(handle, out UIntPtr count), (int)count));
 
-        /// <summary>Returns a borrowed <see cref="EmbeddingResponse"/> view at the given batch index.</summary>
+        /// <summary>Returns a borrowed <see cref="EmbeddingResponse"/> view at the given batch index, must be disposed after use.</summary>
         /// <param name="index">The batch index.</param>
         public EmbeddingResponse At(int index)
         {

@@ -21,6 +21,9 @@ using Uralstech.UAI.LiteRTLM.Native;
 #nullable enable
 namespace Uralstech.UAI.LiteRTLM
 {
+    /// <summary>Invoked when chunks of generated content is received from an LiteRT-LM model.</summary>
+    /// <remarks>The callback is NOT invoked on the main thread!</remarks>
+    /// <param name="chunk">A borrowed reference to the generated chunk, you should not dispose it.</param>
     public delegate void StreamCallback(StreamChunk chunk);
     
     /// <summary>Exception thrown when a LiteRT LM native operation fails.</summary>
