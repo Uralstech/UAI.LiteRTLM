@@ -6,25 +6,8 @@ It may not represent best practices for production use.
 ## Aim
 
 UAI.LiteRTLM aims to provide a 1:1 interface to the LiteRT-LM cross-platform C API.
-Since LiteRT-LM's C API is still under development, this section explains the breaking
-changes policy and LiteRT-LM version support for UAI.LiteRTLM.
-
-### Versioning Scheme
-
-This package tries to follow [semantic versioning](https://semver.org/), with a few caveats:
-
-- **All** versions leading up to the stable release of the LiteRT-LM C API **will** be *preview* versions.
-    - Example: `2.1.0-preview.3`, `2.0.0-preview.1`
-
-- `MINOR` version updates (`x.Y.z`, where `Y` is the `MINOR` version number) indicate a change in the LiteRT-LM tag and/or commit ID used by the package.
-    - Example: UAI.LiteRTLM `2.6.0-preview.x` -> LiteRT-LM `v0.17.1`, `2.5.0-preview.x` -> LiteRT-LM `v0.17.0`
-
-- `MINOR` version updates may contain breaking changes due to changes in the LiteRT-LM C API.
-
-- `PATCH` version updates are represented by the `preview` label (`x.y.0-preview.Z`, where `Z` is the `PATCH` version number) instead of the standard `x.y.Z` format.
-
-- `PATCH` version updates aim to be backwards compatible, with exceptions for application-level metadata changes that may be required by the update.
-    - Example: `2.1.0-preview.2` switches from WebGPU to OpenCL acceleration on Android, requiring additional entries in the application's `AndroidManifest.xml`.
+As of LiteRT-LM v0.19.0, the C API is now stable. As UAI.LiteRTLM is working to stabilize its own API,
+the package is currently in preview.
 
 ### Prebuilt Binaries
 
@@ -46,73 +29,42 @@ Build script contributions are always welcome!
 
 The package API is roughly split into two parts: the [low-level](~/api/Uralstech.UAI.LiteRTLM.Native.yml) API and the [high-level](~/api/Uralstech.UAI.LiteRTLM.yml) API.
 
-#### Low-level API (`NativeAPI`)
+#### Low-level API
 
-The low-level API, exposed by the `NativeAPI` static class, is a simple wrapper around all functions exposed by the LiteRT-LM C API.
-It works directly with pointers and `MonoPInvokeCallback`s, so using this API requires you to manage native C memory yourself.
+The low-level API, exposed by various static class, is a simple wrapper around all functions exposed by the LiteRT-LM C API.
+It works directly with SafeHandle derivatives and `MonoPInvokeCallback`s, so using this API requires you to manage native C memory yourself.
 
-#### High-level API (`ManagedAPI`)
+There's no error handling in the low level API. All native methods return a `StatusCode` indicating success or failure.
 
-The high-level API, defined in `ManagedAPI.cs`, is a collection of handle classes that wrap all native structures defined by the
-native API and implement `IDisposable`. All pointers and native callbacks are handled automatically, and some wrappers also
-provide additional abstractions to make them easier to use. These wrapper classes also implicitly convert to `IntPtr`, allowing you to use
-them with the native API if needed.
+#### High-level API
 
-Currently, only one feature implemented by the native API is **not** exposed by the managed API. You cannot pass custom additional
+The high-level API is a collection of classes that wrap all native structures and handles defined by the
+native API and implement `IDisposable`. References, callbacks, and threading are handled automatically, and some wrappers also
+provide additional abstractions to make them easier to use.
+
+Only one feature implemented by the native API is **not** exposed by the managed API: You cannot pass custom additional
 data to streamed operations because the wrappers use their own data to track managed `StreamCallback`s.
+
+The high-level API wraps all failures into `LiteRTLMException`s, including messages from the native plugin. Theoretically,
+all native functions can fail, so every operation *can* throw a `LiteRTLMException`.
 
 ### Compatability Table
 
 | UAI.LiteRTLM     | LiteRT-LM                      | Included Platforms                                                                | Included Accelerators                                                 |
 | ---------------- | ------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 2.7.0-preview.1+ | v0.18.0 (`b2f686e`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
-| 2.6.0-preview.1+ | `dadb79c` (v0.17.1)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
-| 2.5.0-preview.1+ | v0.17.0 (`e9fd8c5`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
-| 2.4.0-preview.1+ | v0.16.1 / v0.16.0 (`924e79c`)  | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
-| 2.3.0-preview.1+ | v0.16.0 (`740f122`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
-| 2.2.0-preview.1+ | v0.15.0 (`2117fc4`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
-| 2.1.0-preview.5+ | v0.15.0-alpha0 (`ad53ed1`)     | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
+| 3.0.0-preview.1  | v0.19.1 (`7a03724`)            | Android (arm64)<br/>macOS (arm64)<br/>iOS (arm64, sim_arm64)<br/>Windows (x64)    | CPU<br/>OpenCL (Android)<br/>Metal (macOS, iOS)<br/>WebGPU (Windows)  |
 
 #### LiteRT-LM Notes
 
-# [v0.17.1](#tab/litert-lm-notes-v0171)
+# [v0.19.1](#tab/litert-lm-notes-v0191)
 
-Uses a fork of LiteRT-LM at v0.17.1 (`5e58e9a`) with commit `a1b8ec1` cherry-picked onto it to fix [#3247](https://github.com/google-ai-edge/LiteRT-LM/issues/3247).
-The cherry-pick was pushed to the `latest-stable` branch of my fork of LiteRT-LM, with commit ID [`dadb79c`](https://github.com/Uralstech/LiteRT-LM/tree/dadb79c64229af33dab023e94e7030e872b7a915).
-
-# [v0.17.0](#tab/litert-lm-notes-v0170)
-
-`2.5.0-preview.2+` expose all LiteRT-LM C APIs and contain multiple bugfixes, but also breaking changes. Review the release notes for more details.
-
-`2.5.0-preview.1` does not expose the [`experimental`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/experimental.h) and [`embedding_engine`](https://github.com/google-ai-edge/LiteRT-LM/blob/e9fd8c53ff968071774206163027dd84bedfe925/c/embedding_engine.h) APIs.
-
-# [v0.16.1/v0.16.0](#tab/litert-lm-notes-v0161-v0160)
-
-LiteRT-LM v0.16.1 and v0.16.0 target the same commit as of 19/08/2026.
-
-GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Windows.
-
-`2.4.0-preview.x` and `2.3.0-preview.x` target the same tag but different commits
-as the upstream tag was edited after `2.3.0-preview.1` was released.
-
-# [v0.15.0](#tab/litert-lm-notes-v0150)
-
-GPU sampling is [bugged](https://github.com/google-ai-edge/LiteRT-LM/issues/3135) on Android (arm64) and Windows.
-
-The `2.2.0-preview.1+` releases include the patched `libLiteRtTopKOpenClSampler.so`, from commit `8bee4dd`, to fix the issue on Android.
-
-# [v0.15.0-alpha0](#tab/litert-lm-notes-v0150-alpha0)
-
-Provides Metal acceleration on iOS devices, but the iOS simulator uses CPU-only TopK sampling.
+- LiteRT-LM's build scripts [force](https://github.com/google-ai-edge/LiteRT-LM/issues/4611) `libwebgpu_dawn` to be linked to the macOS and Android libraries, so it is included.
+- GPU-accelerated-sampling is [broken](https://github.com/google-ai-edge/LiteRT-LM/issues/4613) on Windows, so it has been unlinked through a [patch](https://github.com/Uralstech/UAI.LiteRTLM/blob/master/Native/Patches/v0.19.1.patch) to LiteRT-LM's Bazel scripts.
 
 ---
 
 > [!IMPORTANT]
-> 2.7.0-preview.3 contains an important fix for iOS, which allows you to upload apps using this package to App Store Connect.
-> As of writing, this fix is not yet available for the .NET 6+ NuGet package.
-
-> [!IMPORTANT]
-> When upgrading from 2.7.0-preview.2 to 2.7.0-preview.3, please do a "Replace" Unity build for the Xcode project.
+> 3.0.0-preview.1 contains many breaking changes from 2.X.X-preview.x
 
 ## Android GPU Acceleration
 
@@ -125,11 +77,7 @@ To enable GPU acceleration on Android, add the following to the `<application>` 
 
 ## NuGet Package / .NET 6+
 
-Starting with `2.2.0-preview.2`, UAI.LiteRTLM is also available on NuGet for .NET 6+! It supports all the same platforms as the Unity package, and works with MAUI.
-
-Because the main package includes some Unity-specific workarounds, using the NuGet package requires a small amount of additional setup.
-Before creating the `Engine`, call `Accelerators.LoadNativeLibraries()` to pre-load the native accelerator libraries.
-You only need to call this method once; subsequent calls are no-ops.
+Development of the NuGet package has been paused for 3.0.0-preview.1 to focus on stabilizing the Unity C# APIs first.
 
 ## Example Script
 
@@ -141,7 +89,7 @@ using Uralstech.UAI.LiteRTLM;
 
 private async Awaitable RunConversation()
 {
-    LiteRTLMNativeLogging.SetMinLogLevel(LogSeverity.Info);
+    LiteRTLM.SetMinLogLevel(LogSeverity.Info);
     
     string modelPath = Path.Join(Application.persistentDataPath, "model.litertlm");
     string cacheDir = Path.Join(Application.temporaryCachePath, "modelCache");
@@ -156,8 +104,12 @@ private async Awaitable RunConversation()
     using (ModelInfo modelCapabilities = new(modelPath))
         supportsSpeculativeDecoding = modelCapabilities.HasSpeculativeDecodingSupport();
 
+    using SpeculativeDecodingConfig speculativeDecodingConfig = new();
+    speculativeDecodingConfig.SetMode(!isWindows && supportsSpeculativeDecoding 
+        ? SpeculativeDecodingMode.On : SpeculativeDecodingMode.Off);
+    
     using EngineSettings engineSettings = new(modelPath, BackendNames.GPU);
-    engineSettings.SetEnableSpeculativeDecoding(!isWindows && supportsSpeculativeDecoding);
+    engineSettings.SetSpeculativeDecodingConfig(speculativeDecodingConfig);
     engineSettings.SetCacheDir(cacheDir);
     engineSettings.EnableBenchmark();
     
@@ -186,11 +138,8 @@ private async Awaitable RunConversation()
             completionSource.TrySetResult(true);
     }
     
-    int result = conversation.SendMessageStream(OnChunk, message);
-    Debug.Log("Message sent: " + (result == 0));
-
-    if (result == 0)
-        await completionSource.Task;
+    conversation.SendMessageStream(OnChunk, message);
+    await completionSource.Task;
     
     using BenchmarkInfo? benchmarkInfo = conversation.GetBenchmarkInfo();
     if (benchmarkInfo == null)

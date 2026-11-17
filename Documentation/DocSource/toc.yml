@@ -6,3 +6,5 @@ pdfPrintBackground: true
 items:
 - name: Quick Start
   href: QuickStart.md
+- name: (Archived) v0.18.0 Quick Start
+  href: QuickStart-Archived.md
