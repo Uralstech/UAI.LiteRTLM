@@ -98,11 +98,12 @@ git apply "%LITERTLM_PATCH%"
 
 call :build windows                             ^
     "--define=litert_runtime_link_mode=dynamic" ^
-    "--define=disable_static_gpu_samplers=true"
+    "--define=disable_static_gpu_samplers=true" ^
+    "--cxxopt=/utf-8"
 
 if errorlevel 1 exit /b 1
 
-call :copy_libs "litert-lm" windows x86_64 dll Windows "%PREBUILT_LIBS_PC%"
+call :copy_libs "litert-lm-omni" windows x86_64 dll Windows "%PREBUILT_LIBS_PC%"
 call :copy_windows_x64_libs
 
 echo LITERT_LM_REV = "%HEAD_COMMIT%" > "%PLUGIN_DIR%\.build_sources.windows_x64.txt"
