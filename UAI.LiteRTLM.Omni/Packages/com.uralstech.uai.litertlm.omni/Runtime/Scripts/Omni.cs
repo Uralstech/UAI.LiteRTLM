@@ -70,6 +70,16 @@ namespace Uralstech.UAI.LiteRTLM.Omni
             LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_num_threads(
                 handle, numThreads));
 
+        /// <summary>Requests low GPU scheduling priority where the runtime supports it.</summary>
+        public void SetGpuContextLowPriority(bool lowPriority) =>
+            LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_gpu_context_low_priority(
+                handle, lowPriority));
+
+        /// <summary>Sets the GPU kernel batch-size hint. Zero uses the runtime default.</summary>
+        public void SetHintKernelBatchSize(int batchSize) =>
+            LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_hint_kernel_batch_size(
+                handle, batchSize));
+
         /// <summary>Sets the maximum number of generated frames. Zero uses the model default.</summary>
         public void SetMaxFrames(int maxFrames) =>
             LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_max_frames(
@@ -316,6 +326,16 @@ namespace Uralstech.UAI.LiteRTLM.Omni
         public void SetNumThreads(int numThreads) =>
             LockedExecute(handle => OmniH.litert_omni_asr_engine_settings_set_num_threads(
                 handle, numThreads));
+
+        /// <summary>Requests low GPU scheduling priority where the runtime supports it.</summary>
+        public void SetGpuContextLowPriority(bool lowPriority) =>
+            LockedExecute(handle => OmniH.litert_omni_asr_engine_settings_set_gpu_context_low_priority(
+                handle, lowPriority));
+
+        /// <summary>Sets the GPU kernel batch-size hint. Zero uses the runtime default.</summary>
+        public void SetHintKernelBatchSize(int batchSize) =>
+            LockedExecute(handle => OmniH.litert_omni_asr_engine_settings_set_hint_kernel_batch_size(
+                handle, batchSize));
 
         /// <summary>Sets the ASR overlap ratio in the range [0, 1).</summary>
         public void SetOverlapRatio(float overlapRatio) =>

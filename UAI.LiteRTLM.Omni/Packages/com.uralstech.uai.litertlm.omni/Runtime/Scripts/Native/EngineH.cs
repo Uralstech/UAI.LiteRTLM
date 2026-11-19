@@ -747,6 +747,33 @@ namespace Uralstech.UAI.LiteRTLM.Omni.Native
             EngineSettingsHandle settings, int numThreads);
 
         /// <summary>
+        /// Sets whether to request low GPU context priority for the main executor.
+        /// </summary>
+        /// <param name="settings">The engine settings.</param>
+        /// <param name="lowPriority">Whether to request low GPU context priority.</param>
+        /// <returns>
+        /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
+        /// <paramref name="settings"/> is invalid.
+        /// </returns>
+        [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern StatusCode litert_lm_engine_settings_set_gpu_context_low_priority(
+            EngineSettingsHandle settings, [MarshalAs(UnmanagedType.I1)] bool lowPriority);
+
+        /// <summary>
+        /// Sets the GPU kernel batch-size hint for the main executor. Zero restores
+        /// the engine's automatic default.
+        /// </summary>
+        /// <param name="settings">The engine settings.</param>
+        /// <param name="hintKernelBatchSize">The GPU kernel batch-size hint, or zero for the automatic default.</param>
+        /// <returns>
+        /// <see cref="StatusCode.Ok"/> on success, or <see cref="StatusCode.InvalidArgument"/> if
+        /// <paramref name="settings"/> is invalid or <paramref name="hintKernelBatchSize"/> is negative.
+        /// </returns>
+        [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern StatusCode litert_lm_engine_settings_set_hint_kernel_batch_size(
+            EngineSettingsHandle settings, int hintKernelBatchSize);
+
+        /// <summary>
         /// Sets the number of threads for the audio CPU backend.
         /// </summary>
         /// <param name="settings">The engine settings.</param>

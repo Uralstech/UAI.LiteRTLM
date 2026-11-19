@@ -52,6 +52,14 @@ namespace Uralstech.UAI.LiteRTLM.Omni.Native
             OmniTtsEngineSettingsHandle settings, int numThreads);
 
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern StatusCode litert_omni_tts_engine_settings_set_gpu_context_low_priority(
+            OmniTtsEngineSettingsHandle settings, [MarshalAs(UnmanagedType.I1)] bool lowPriority);
+
+        [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern StatusCode litert_omni_tts_engine_settings_set_hint_kernel_batch_size(
+            OmniTtsEngineSettingsHandle settings, int batchSize);
+
+        [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_omni_tts_engine_settings_set_max_frames(
             OmniTtsEngineSettingsHandle settings, int maxFrames);
 
@@ -137,6 +145,14 @@ namespace Uralstech.UAI.LiteRTLM.Omni.Native
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_omni_asr_engine_settings_set_num_threads(
             OmniAsrEngineSettingsHandle settings, int numThreads);
+
+        [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern StatusCode litert_omni_asr_engine_settings_set_gpu_context_low_priority(
+            OmniAsrEngineSettingsHandle settings, [MarshalAs(UnmanagedType.I1)] bool lowPriority);
+
+        [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
+        public static extern StatusCode litert_omni_asr_engine_settings_set_hint_kernel_batch_size(
+            OmniAsrEngineSettingsHandle settings, int batchSize);
 
         [DllImport(Core.Lib, CallingConvention = CallingConvention.Cdecl)]
         public static extern StatusCode litert_omni_asr_engine_settings_set_overlap_ratio(

@@ -306,6 +306,16 @@ namespace Uralstech.UAI.LiteRTLM.Omni
         public void SetNumThreads(int numThreads) =>
             LockedExecute(handle => EngineH.litert_lm_engine_settings_set_num_threads(handle, numThreads));
 
+        /// <summary>Requests low GPU context priority for the main executor where supported.</summary>
+        /// <param name="lowPriority">Whether to request low GPU context priority.</param>
+        public void SetGpuContextLowPriority(bool lowPriority) =>
+            LockedExecute(handle => EngineH.litert_lm_engine_settings_set_gpu_context_low_priority(handle, lowPriority));
+
+        /// <summary>Sets the GPU kernel batch-size hint; zero restores the engine's automatic default.</summary>
+        /// <param name="hintKernelBatchSize">The GPU kernel batch-size hint, or zero for the automatic default.</param>
+        public void SetHintKernelBatchSize(int hintKernelBatchSize) =>
+            LockedExecute(handle => EngineH.litert_lm_engine_settings_set_hint_kernel_batch_size(handle, hintKernelBatchSize));
+
         /// <summary>Sets the number of threads for the audio CPU backend.</summary>
         /// <param name="numThreads">The number of threads.</param>
         public void SetAudioNumThreads(int numThreads) =>
