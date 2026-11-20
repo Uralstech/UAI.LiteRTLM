@@ -20,7 +20,7 @@
     {
       "src": [
         {
-          "src": "../UAI.LiteRTLM",
+          "src": "../UAI.LiteRTLM.Omni",
           "files": [
             "Packages/com.uralstech.uai.litertlm.omni/Runtime/**/*.cs"
           ]
