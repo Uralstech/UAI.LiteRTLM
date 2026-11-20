@@ -747,7 +747,7 @@ namespace Uralstech.UAI.LiteRTLM.Omni.Native
             EngineSettingsHandle settings, int numThreads);
 
         /// <summary>
-        /// Sets whether to request low GPU context priority for the main executor.
+        /// Sets whether to request low GPU context priority for all configured executors.
         /// </summary>
         /// <param name="settings">The engine settings.</param>
         /// <param name="lowPriority">Whether to request low GPU context priority.</param>
@@ -760,8 +760,8 @@ namespace Uralstech.UAI.LiteRTLM.Omni.Native
             EngineSettingsHandle settings, [MarshalAs(UnmanagedType.I1)] bool lowPriority);
 
         /// <summary>
-        /// Sets the GPU kernel batch-size hint for the main executor. Zero restores
-        /// the engine's automatic default.
+        /// Sets the GPU kernel batch-size hint for all configured executors. Zero
+        /// restores the runtime default.
         /// </summary>
         /// <param name="settings">The engine settings.</param>
         /// <param name="hintKernelBatchSize">The GPU kernel batch-size hint, or zero for the automatic default.</param>

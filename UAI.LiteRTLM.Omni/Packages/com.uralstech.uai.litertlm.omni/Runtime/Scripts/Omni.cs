@@ -70,12 +70,12 @@ namespace Uralstech.UAI.LiteRTLM.Omni
             LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_num_threads(
                 handle, numThreads));
 
-        /// <summary>Requests low GPU scheduling priority where the runtime supports it.</summary>
+        /// <summary>Requests low priority for all GPU-backed TTS model components where supported.</summary>
         public void SetGpuContextLowPriority(bool lowPriority) =>
             LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_gpu_context_low_priority(
                 handle, lowPriority));
 
-        /// <summary>Sets the GPU kernel batch-size hint. Zero uses the runtime default.</summary>
+        /// <summary>Sets the GPU kernel batch-size hint for all GPU-backed TTS components. Zero uses the runtime default.</summary>
         public void SetHintKernelBatchSize(int batchSize) =>
             LockedExecute(handle => OmniH.litert_omni_tts_engine_settings_set_hint_kernel_batch_size(
                 handle, batchSize));
@@ -327,12 +327,12 @@ namespace Uralstech.UAI.LiteRTLM.Omni
             LockedExecute(handle => OmniH.litert_omni_asr_engine_settings_set_num_threads(
                 handle, numThreads));
 
-        /// <summary>Requests low GPU scheduling priority where the runtime supports it.</summary>
+        /// <summary>Requests low priority for all GPU-backed ASR model components where supported.</summary>
         public void SetGpuContextLowPriority(bool lowPriority) =>
             LockedExecute(handle => OmniH.litert_omni_asr_engine_settings_set_gpu_context_low_priority(
                 handle, lowPriority));
 
-        /// <summary>Sets the GPU kernel batch-size hint. Zero uses the runtime default.</summary>
+        /// <summary>Sets the GPU kernel batch-size hint for all GPU-backed ASR components. Zero uses the runtime default.</summary>
         public void SetHintKernelBatchSize(int batchSize) =>
             LockedExecute(handle => OmniH.litert_omni_asr_engine_settings_set_hint_kernel_batch_size(
                 handle, batchSize));
