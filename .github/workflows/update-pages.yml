@@ -18,6 +18,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v7
+      with:
+        ref: ${{ github.ref }}
+        fetch-depth: 0
 
     - name: Dotnet Setup
       uses: actions/setup-dotnet@v6
@@ -33,8 +36,11 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v5
       with:
+        name: docfx-upload
         path: 'Documentation/_site'
         
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
+      with:
+        artifact_name: docfx-upload
